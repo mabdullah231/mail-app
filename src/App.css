@@ -1,0 +1,32 @@
+/* Apply custom scrollbar to the ul element with class "custom-scroll" */
+.custom-scroll {
+  max-height: 400px; /* Adjust this height as necessary */
+  overflow-y: auto;
+}
+
+/* Styling the scrollbar */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px; /* Thin scrollbar width */
+}
+
+/* Styling the scrollbar track (background of the scrollbar) */
+.custom-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+/* Styling the scrollbar thumb (the draggable part) */
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+/* Styling the thumb when hovered */
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Optionally, for webkit browsers like Chrome and Safari */
+.custom-scroll::-webkit-scrollbar-corner {
+  background: #f1f1f1;
+}
