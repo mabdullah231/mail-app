@@ -1,21 +1,23 @@
-import React from 'react';
+import React from "react";
 
 const NotFound404 = () => {
   const goBack = () => {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem("user");
     if (user) {
       // Redirect to home page if user exists in localStorage
-      window.location.href = '/';
+      window.location.href = "/";
     } else {
       // Redirect to sign-in page if no user in localStorage
-      window.location.href = '/auth/sign-in';
+      window.location.href = "/sign-in";
     }
   };
 
   return (
     <div className="not-found-container">
       <h1 className="not-found-heading">404 - Page Not Found</h1>
-      <button className="go-back-btn" onClick={goBack}>Go Back</button>
+      <button className="go-back-btn" onClick={goBack}>
+        Go Back
+      </button>
 
       {/* Scoped CSS */}
       <style jsx>{`

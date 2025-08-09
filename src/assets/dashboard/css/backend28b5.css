@@ -7316,7 +7316,9 @@ a.text-skyblue:hover, a.text-skyblue:focus {
   -ms-transition: all 0.6s ease-in-out;
   -o-transition: all 0.6s ease-in-out;
   transition: all 0.6s ease-in-out; }
-
+  .iq-sidebar.collapsed ~ .iq-top-navbar {
+    margin-left: 80px;
+  }
 @media (min-width: 1300px) {
   .iq-top-navbar .iq-navbar-custom .wrapper-menu {
     display: none; }
