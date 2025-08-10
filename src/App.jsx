@@ -80,7 +80,7 @@ const AuthGuard = ({ children, requiredRoles }) => {
   const userRole = ROLE_MAP[user?.user_type];
 
   if (!user || !token) {
-    Helpers.toast("error", "Please login to access dashboard");
+    Helpers.toast("error", "Please Sign In to access dashboard");
     return <Navigate to="/sign-in" />;
   }
 

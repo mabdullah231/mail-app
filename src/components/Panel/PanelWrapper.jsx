@@ -55,7 +55,10 @@ const PanelWrapper = () => {
   const handleSignOut = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
-    navigate("/");
+    setTimeout(() => {
+      navigate("/sign-in");
+      Helpers.toast("success","Logged Out Successfully")
+    }, 50); // or 50ms
   };
   // Navbar dropdown states
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
