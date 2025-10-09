@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Helpers from "../../config/Helpers";
-import axios from "axios";
+import authService from "../../services/authService";
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -32,6 +32,7 @@ const SignUp = () => {
   };
 
   const handleSubmit = async (e) => {
+    alert('test');
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.password) {

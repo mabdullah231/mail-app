@@ -8,7 +8,14 @@ export { default as NewPassword } from './auth/NewPassword';
 export { default as CompanyDetails } from './auth/CompanyDetails';
 
 // Shared
-export { default as Dashboard } from './Dashboard';
+export { default as Dashboard } from '../pages/Dashboard';
+export { default as Customers } from '../pages/Customers';
+export { default as CustomerForm } from '../pages/CustomerForm';
+export { default as Templates } from '../pages/Templates';
+export { default as Campaigns } from '../pages/Campaigns';
+export { default as Analytics } from '../pages/Analytics';
+export { default as Settings } from '../pages/Settings';
+export { default as SuperAdmin } from '../pages/SuperAdmin';
 
 // Admin Components
 export { default as AdminSettings } from './Admin/AdminSettings';
@@ -25,7 +32,6 @@ export { default as DonationsLog } from './Admin/DonationsLog';
 export { default as CompanySettings } from './Company/Settings';
 export { default as MyPlan } from './Company/MyPlan';
 export { default as DonationPage } from './Company/DonationPage';
-export { default as Customers } from './Company/Customers';
 export { default as CompanyUsers } from './Company/Users';
 export { default as NotificationRules } from './Company/NotificationRules';
 export { default as EmailTemplates } from './Company/EmailTemplates';

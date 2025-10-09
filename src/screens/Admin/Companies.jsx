@@ -106,13 +106,20 @@ const AdminCompanies = () => {
                     <td>{comp.country}</td>
                     <td>
                       <span
-                        className={`badge bg-$
-                          {comp.status === "active" ? "success" : "secondary"}`}
+                        style={{
+                          background:
+                            comp.status === "active" ? "green" : "gray",
+                          color: "white",
+                          padding: "2px 8px",
+                          borderRadius: "8px",
+                          textTransform: "capitalize",
+                        }}
                       >
                         {comp.status}
                       </span>
                     </td>
-                    <td style={{display:"flex", gap:"10px"}}>
+
+                    <td style={{ display: "flex", gap: "10px" }}>
                       <Button
                         variant="info"
                         size="sm"

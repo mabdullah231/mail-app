@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import classNames from "classnames";
 import "./Wrapper.css";
 import Helpers from "../../config/Helpers";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
-import allRoutes from "../../Routes";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import allRoutes, { getVisibleRoutes } from "../../Routes";
 
 const PanelWrapper = () => {
   const location = useLocation();
@@ -37,7 +37,8 @@ const PanelWrapper = () => {
       });
   };
   
-  const roleBasedRoutes = filterRoutesByRole(allRoutes, role);
+  const visibleRoutes = getVisibleRoutes(allRoutes);
+  const roleBasedRoutes = filterRoutesByRole(visibleRoutes, role);
 
   console.log(roleBasedRoutes);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -382,7 +383,7 @@ const PanelWrapper = () => {
   }
   
   .data-scrollbar {
-    overflow: hidden;
+    overflow-y: auto;
     height: calc(100vh - 60px);
   }
 

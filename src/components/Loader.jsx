@@ -4,7 +4,7 @@ const Loader = () => {
   return (
     <div className="loader-container">
       <div className="spinner"></div>
-      <style jsx>{`
+      <style>{`
         .loader-container {
           position: fixed;
           top: 0;

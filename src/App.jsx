@@ -1,4 +1,5 @@
 // App.jsx
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -18,20 +19,28 @@ import {
   NewPassword,
   CompanyDetails,
 } from "./screens";
+// Add this import at the top of App.jsx
+import TemplatePreview from './components/Template/TemplatePreview';
 import Helpers from "./config/Helpers";
 import {
   Dashboard,
-  // Admin
+  Customers,
+  CustomerForm,
+  Templates,
+  Campaigns,
+  Analytics,
+  Settings,
+  SuperAdmin,
+  // AdminUsers,
   AdminCompanies,
   AdminPricingPlans,
   AdminSettings,
   EmailLogs,
   DonationsLog,
-  // Company
+  // AdminDashboard, // Removed since it's causing the error
   CompanySettings,
   MyPlan,
   DonationPage,
-  Customers,
   CompanyUsers,
   NotificationRules,
   EmailTemplates,
@@ -40,8 +49,9 @@ import {
   SendSMSCampaign,
   CampaignScheduler,
   CompanyEmailLogs,
-  CompanySMSLogs,
+  CompanySMSLogs
 } from "./screens";
+import TemplateForm from "./components/Template/TemplateForm";
 import AuthCallback from "./screens/auth/AuthCallback";
 
 const ROLE_MAP = {
@@ -54,19 +64,16 @@ const CompanyDetailsGuard = ({ children }) => {
   const user = Helpers.getItem("user", true);
   const token = Helpers.getItem("token");
 
-  // Must be logged in
   if (!user || !token) {
     Helpers.toast("error", "Please login to access this page");
     return <Navigate to="/sign-in" />;
   }
 
-  // Must be a company
   if (user.user_type !== "1") {
     Helpers.toast("error", "Only companies can access this page");
     return <Navigate to="/panel" />;
   }
 
-  // Must not already have company details
   if (user.company_detail !== null) {
     return <Navigate to="/panel" />;
   }
@@ -80,41 +87,17 @@ const AuthGuard = ({ children, requiredRoles }) => {
   const userRole = ROLE_MAP[user?.user_type];
 
   if (!user || !token) {
-    Helpers.toast("error", "Please Sign In to access dashboard");
-    return <Navigate to="/sign-in" />;
-  }
-
-  if (userRole === "company" && !user.company_detail) {
-    return <Navigate to="/company-details" />;
+    return <Navigate to="/sign-in" replace />;
   }
 
   if (requiredRoles && !requiredRoles.includes(userRole)) {
-    Helpers.toast("error", "You don't have permission to access this page");
-    return <Navigate to="/panel" />;
+    return <Navigate to="/panel" replace />;
   }
 
   return children;
 };
 
-// FIXED: Updated PublicRoute to exclude company-details from redirect logic
 const PublicRoute = ({ children }) => {
-  const user = Helpers.getItem("user", true);
-  const token = Helpers.getItem("token");
-  const currentPath = window.location.pathname;
-
-  // Allow access to company-details and recovery routes even if authenticated
-  const allowedAuthenticatedRoutes = [
-    "/company-details", 
-    "/forget-password", 
-    "/new-password", 
-    "/code-verification", 
-    "/confirm-mail"
-  ];
-
-  if (user && token && !allowedAuthenticatedRoutes.includes(currentPath)) {
-    return <Navigate to="/panel" />;
-  }
-
   return children;
 };
 
@@ -127,14 +110,15 @@ function App() {
         {/* Root redirect */}
         <Route
           path="/"
-          element={
-            Helpers.getItem("user", true) && Helpers.getItem("token") ? (
-              <Navigate to="/panel" />
-            ) : (
-              <Navigate to="/sign-in" />
-            )
-          }
+          element={(() => {
+            const user = Helpers.getItem("user", true);
+            const token = Helpers.getItem("token");
+            return (user && token) ? <Navigate to="/panel" replace /> : <Navigate to="/sign-in" replace />;
+          })()}
         />
+
+        {/* Login redirect */}
+        <Route path="/login" element={<Navigate to="/sign-in" replace />} />
 
         {/* Public Auth Routes */}
         <Route
@@ -159,7 +143,7 @@ function App() {
           <Route index element={<SignUp />} />
         </Route>
 
-        {/* Company Details - Special case for authenticated companies without details */}
+        {/* Company Details */}
         <Route
           path="/company-details"
           element={
@@ -171,7 +155,7 @@ function App() {
           <Route index element={<CompanyDetails />} />
         </Route>
 
-        {/* Recovery Routes - No PublicRoute wrapper needed */}
+        {/* Recovery Routes */}
         <Route
           path="/forget-password"
           element={<AuthLayout />}
@@ -209,7 +193,6 @@ function App() {
             </AuthGuard>
           }
         >
-          {/* Dashboard */}
           <Route index element={<Dashboard />} />
 
           {/* Admin routes */}
@@ -262,7 +245,86 @@ function App() {
             }
           />
 
+          {/* Super Admin route */}
+          <Route
+            path="super-admin"
+            element={
+              <AuthGuard requiredRoles={["admin"]}>
+                <SuperAdmin />
+              </AuthGuard>
+            }
+          />
+
           {/* Company routes */}
+         // In your App.jsx, inside the templates route group, add:
+<Route path="templates">
+  <Route
+    index
+    element={
+      <AuthGuard requiredRoles={["company"]}>
+        <Templates />
+      </AuthGuard>
+    }
+  />
+  <Route
+    path="new"
+    element={
+      <AuthGuard requiredRoles={["company"]}>
+        <TemplateForm />
+      </AuthGuard>
+    }
+  />
+  <Route
+    path="edit/:id"
+    element={
+      <AuthGuard requiredRoles={["company"]}>
+        <TemplateForm />
+      </AuthGuard>
+    }
+  />
+  {/* Add this preview route */}
+  <Route
+    path="preview/:id"
+    element={
+      <AuthGuard requiredRoles={["company"]}>
+        <TemplatePreview />
+      </AuthGuard>
+    }
+  />
+</Route>
+          <Route
+            path="campaigns"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <Campaigns />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="analytics"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <Analytics />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <Settings />
+              </AuthGuard>
+            }
+          />
+         
+          <Route
+            path="customer/edit/:id"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <CustomerForm />
+              </AuthGuard>
+            }
+          />
           <Route
             path="edit-profile"
             element={
@@ -284,6 +346,14 @@ function App() {
             element={
               <AuthGuard requiredRoles={["company"]}>
                 <Customers />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="customers/new"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <CustomerForm />
               </AuthGuard>
             }
           />

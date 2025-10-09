@@ -1,3 +1,5 @@
+/* @import "tailwindcss"; */
+
 /* Apply custom scrollbar to the ul element with class "custom-scroll" */
 .custom-scroll {
   max-height: 400px; /* Adjust this height as necessary */

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Helpers from "../../config/Helpers";
-import axios from "axios";
+import authService from "../../services/authService";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -39,21 +39,13 @@ const SignIn = () => {
       setIsLoading(true);
       setError(null);
   
-      const response = await axios.post(
-        `${Helpers.apiUrl}auth/login`,
-        formData,
-        Helpers.getAuthHeaders()
-      );
-  
-      const data = response.data;
+      const data = await authService.login(formData);
   
       Helpers.toast("success", "Login successful.");
-      Helpers.setItem("token", data.token);
-      Helpers.setItem("user", JSON.stringify(data.user));
   
       const userType = parseInt(data.user.user_type);
   
-      // 🚀 Redirect logic
+      // Redirect logic
       if (userType === 1) { // Company
         if (!data.user.company_detail) {
           navigate("/company-details");

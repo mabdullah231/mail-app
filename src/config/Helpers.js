@@ -52,10 +52,16 @@ class Helpers {
   }
 
   static getItem = (data, isJson = false) => {
-    if (isJson) {
-      return JSON.parse(localStorage.getItem(data));
-    } else {
-      return localStorage.getItem(data);
+    try {
+      if (isJson) {
+        const item = localStorage.getItem(data);
+        return item ? JSON.parse(item) : null;
+      } else {
+        return localStorage.getItem(data);
+      }
+    } catch (error) {
+      console.error(`Error getting item ${data}:`, error);
+      return null;
     }
   };
 
