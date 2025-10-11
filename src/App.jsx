@@ -256,42 +256,76 @@ function App() {
           />
 
           {/* Company routes */}
-         // In your App.jsx, inside the templates route group, add:
-<Route path="templates">
-  <Route
-    index
-    element={
-      <AuthGuard requiredRoles={["company"]}>
-        <Templates />
-      </AuthGuard>
-    }
-  />
-  <Route
-    path="new"
-    element={
-      <AuthGuard requiredRoles={["company"]}>
-        <TemplateForm />
-      </AuthGuard>
-    }
-  />
-  <Route
-    path="edit/:id"
-    element={
-      <AuthGuard requiredRoles={["company"]}>
-        <TemplateForm />
-      </AuthGuard>
-    }
-  />
-  {/* Add this preview route */}
-  <Route
-    path="preview/:id"
-    element={
-      <AuthGuard requiredRoles={["company"]}>
-        <TemplatePreview />
-      </AuthGuard>
-    }
-  />
-</Route>
+          <Route path="templates">
+            <Route
+              index
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <Templates />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="new"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <TemplateForm />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="edit/:id"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <TemplateForm />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="preview/:id"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <TemplatePreview />
+                </AuthGuard>
+              }
+            />
+          </Route>
+          {/* Customer routes */}
+          <Route path="customers">
+            <Route
+              index
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <Customers />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="new"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <CustomerForm />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="add"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <CustomerForm />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="edit/:id"
+              element={
+                <AuthGuard requiredRoles={["company"]}>
+                  <CustomerForm />
+                </AuthGuard>
+              }
+            />
+          </Route>
+          
           <Route
             path="campaigns"
             element={
@@ -317,14 +351,6 @@ function App() {
             }
           />
          
-          <Route
-            path="customer/edit/:id"
-            element={
-              <AuthGuard requiredRoles={["company"]}>
-                <CustomerForm />
-              </AuthGuard>
-            }
-          />
           <Route
             path="edit-profile"
             element={

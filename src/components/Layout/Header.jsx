@@ -14,7 +14,8 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
-  const user = getUserData();
+  const userData = getUserData();
+  const user = userData?.user;
 
   const handleLogout = () => {
     logout();

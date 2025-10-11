@@ -1,4 +1,5 @@
 import api from '../config/api';
+import { setUserData } from '../utils/auth'; // Import the function
 
 const authService = {
   // Register new user
@@ -13,6 +14,7 @@ const authService = {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      setUserData(response.data.user); // Now this will work
     }
     return response.data;
   },
@@ -23,6 +25,7 @@ const authService = {
     if (response.data.token) {
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
+      setUserData(response.data.user); // Add here too for consistency
     }
     return response.data;
   },

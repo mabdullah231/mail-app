@@ -15,5 +15,15 @@ export const companyService = {
       },
     });
     return response.data;
+  },
+
+  // Add this method for consistency
+  updateDetails: async (companyData) => {
+    const response = await api.post('/company/store-or-update', companyData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
   }
 };

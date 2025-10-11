@@ -12,6 +12,7 @@ import {
   Mail,
   MessageSquare
 } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Modal, Alert } from 'react-bootstrap';
 import { templateService } from '../services/templateService';
 import { companyService } from '../services/companyService';
 import { Notyf } from 'notyf';
@@ -25,10 +26,40 @@ const Templates = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [company, setCompany] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState(null);
+  const [companyId, setCompanyId] = useState(null);
 
   useEffect(() => {
-    loadTemplates();
+    fetchCompanyId();
   }, []);
+
+  useEffect(() => {
+    if (companyId) {
+      loadTemplates();
+    }
+  }, [companyId]);
+
+  const fetchCompanyId = async () => {
+    try {
+      console.log('Fetching company details...');
+      const response = await companyService.getDetails();
+      console.log('Company details response:', response);
+      
+      if (response.success && response.company && response.company.id) {
+        const extractedCompanyId = response.company.id;
+        setCompanyId(extractedCompanyId);
+        console.log('Company ID set successfully:', extractedCompanyId);
+      } else {
+        console.error('Company ID not found in response:', response);
+        notyf.error('Could not retrieve company information');
+      }
+    } catch (error) {
+      console.error('Error fetching company details:', error);
+      console.error('Error response:', error.response);
+      notyf.error('Failed to load company details. Please check your connection.');
+    }
+  };
 
   useEffect(() => {
     filterTemplates();
@@ -36,14 +67,19 @@ const Templates = () => {
 
   const loadTemplates = async () => {
     try {
-      const companyResponse = await companyService.getDetails();
-      setCompany(companyResponse.company);
+      setLoading(true);
+      console.log('Loading templates with companyId:', companyId);
       
-      if (companyResponse.company) {
-        const response = await templateService.getAll(companyResponse.company.id);
-        setTemplates(response);
-      }
+      const [templatesData, companyData] = await Promise.all([
+        templateService.getAll(companyId),
+        companyService.getDetails()
+      ]);
+      
+      console.log('Templates data:', templatesData);
+      setTemplates(templatesData);
+      setCompany(companyData);
     } catch (error) {
+      console.error('Error loading templates:', error);
       notyf.error('Failed to load templates');
     } finally {
       setLoading(false);
@@ -53,7 +89,6 @@ const Templates = () => {
   const filterTemplates = () => {
     let filtered = templates;
 
-    // Search filter
     if (searchTerm) {
       filtered = filtered.filter(template =>
         template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +96,6 @@ const Templates = () => {
       );
     }
 
-    // Type filter
     if (filterType !== 'all') {
       filtered = filtered.filter(template => template.type === filterType);
     }
@@ -69,12 +103,14 @@ const Templates = () => {
     setFilteredTemplates(filtered);
   };
 
-  const handleDelete = async (templateId) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
+  const handleDelete = async () => {
+    if (templateToDelete) {
       try {
-        await templateService.delete(templateId);
+        await templateService.delete(templateToDelete.id);
         notyf.success('Template deleted successfully');
         loadTemplates();
+        setShowDeleteModal(false);
+        setTemplateToDelete(null);
       } catch (error) {
         notyf.error('Failed to delete template');
       }
@@ -103,22 +139,22 @@ const Templates = () => {
   const getTypeIcon = (type) => {
     switch (type) {
       case 'email':
-        return <Mail className="w-4 h-4" />;
+        return <Mail size={16} />;
       case 'sms':
-        return <MessageSquare className="w-4 h-4" />;
+        return <MessageSquare size={16} />;
       default:
-        return <FileText className="w-4 h-4" />;
+        return <FileText size={16} />;
     }
   };
 
   const getTypeColor = (type) => {
     switch (type) {
       case 'email':
-        return 'bg-primary bg-opacity-10 text-primary';
+        return 'primary';
       case 'sms':
-        return 'bg-success bg-opacity-10 text-success';
+        return 'success';
       default:
-        return 'bg-secondary bg-opacity-10 text-secondary';
+        return 'secondary';
     }
   };
 
@@ -130,207 +166,184 @@ const Templates = () => {
 
   if (loading) {
     return (
-      <div className="d-flex align-items-center justify-content-center" style={{ height: '400px' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col md={6} className="text-center">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="mt-3 text-muted">Loading templates...</p>
+          </Col>
+        </Row>
+      </Container>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
+    <Container fluid className="py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h1 className="h2 fw-bold text-dark mb-1">Email Templates</h1>
-          <p className="text-muted mb-0">Create and manage your email templates</p>
-        </div>
-        <Link
-          to="/panel/templates/new"
-          className="btn btn-primary d-flex align-items-center gap-2"
-        >
-          <Plus size={16} />
-          <span>New Template</span>
-        </Link>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="card mb-4">
-        <div className="card-body">
-          <div className="row g-3 align-items-center">
-            <div className="col-md-6">
-              <div className="d-flex flex-column flex-md-row gap-3">
-                <div className="position-relative flex-grow-1">
-                  <Search className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" size={18} />
-                  <input
-                    type="text"
-                    placeholder="Search templates..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="form-control ps-5"
-                  />
-                </div>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="form-select"
-                  style={{ minWidth: '150px' }}
-                >
-                  <option value="all">All Types</option>
-                  <option value="email">Email Templates</option>
-                  <option value="sms">SMS Templates</option>
-                </select>
-              </div>
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="h2 fw-bold text-dark mb-1">Email Templates</h1>
+              <p className="text-muted mb-0">Create and manage your email templates</p>
             </div>
+            <Link to="/panel/templates/new">
+              <Button variant="primary">
+                <Plus size={16} className="me-2" />
+                Create Template
+              </Button>
+            </Link>
           </div>
-        </div>
-      </div>
+        </Col>
+      </Row>
+
+      {/* Filters */}
+      <Row className="mb-4">
+        <Col md={8}>
+          <InputGroup>
+            <InputGroup.Text>
+              <Search size={16} />
+            </InputGroup.Text>
+            <Form.Control
+              type="text"
+              placeholder="Search templates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </InputGroup>
+        </Col>
+        <Col md={4}>
+          <Form.Select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="all">All Types</option>
+            <option value="email">Email Templates</option>
+            <option value="sms">SMS Templates</option>
+          </Form.Select>
+        </Col>
+      </Row>
 
       {/* Templates Grid */}
-      <div className="row g-4 mb-4">
-        {filteredTemplates.map((template) => (
-          <div key={template.id} className="col-12 col-md-6 col-lg-4">
-            <div className="card h-100 shadow-sm hover-shadow transition-all">
-              <div className="card-body d-flex flex-column">
-                <div className="d-flex justify-content-between align-items-start mb-3">
-                  <div className="flex-grow-1 me-2">
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <h5 className="card-title text-truncate mb-0">
-                        {template.title}
-                      </h5>
-                      {template.is_default && (
-                        <span className="badge bg-warning text-dark">Default</span>
-                      )}
-                    </div>
-                    <div className="d-flex align-items-center gap-2 mb-3">
-                      <span className={`badge d-flex align-items-center gap-1 ${getTypeColor(template.type)}`}>
-                        {getTypeIcon(template.type)}
-                        <span className="text-capitalize">{template.type}</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mb-3 flex-grow-1">
-                  <p className="card-text text-muted small line-clamp-3">
-                    {stripHtml(template.body_html)}
-                  </p>
-                </div>
-
-                {template.placeholders && template.placeholders.length > 0 && (
-                  <div className="mb-3">
-                    <p className="text-muted small mb-2">Placeholders:</p>
-                    <div className="d-flex flex-wrap gap-1">
-                      {template.placeholders.slice(0, 3).map((placeholder, index) => (
-                        <span
-                          key={index}
-                          className="badge bg-light text-dark small"
-                        >
-                          {placeholder}
-                        </span>
-                      ))}
-                      {template.placeholders.length > 3 && (
-                        <span className="text-muted small">
-                          +{template.placeholders.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
+      {filteredTemplates.length === 0 ? (
+        <Row>
+          <Col>
+            <Card className="border-0 shadow-sm">
+              <Card.Body className="text-center py-5">
+                <FileText size={48} className="text-muted mb-3" />
+                <h5 className="text-muted mb-2">No templates found</h5>
+                <p className="text-muted mb-4">
+                  {searchTerm || filterType !== 'all' 
+                    ? 'Try adjusting your search or filter criteria'
+                    : 'Create your first email template to get started'
+                  }
+                </p>
+                {!searchTerm && filterType === 'all' && (
+                  <Link to="/panel/templates/new">
+                    <Button variant="primary">
+                      <Plus size={16} className="me-2" />
+                      Create Your First Template
+                    </Button>
+                  </Link>
                 )}
-
-                <div className="d-flex justify-content-between align-items-center pt-3 border-top">
-                  <div className="text-muted small">
-                    {new Date(template.created_at).toLocaleDateString()}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      ) : (
+        <Row>
+          {filteredTemplates.map((template) => (
+            <Col md={6} lg={4} key={template.id} className="mb-4">
+              <Card className="h-100 border-0 shadow-sm">
+                <Card.Header className="bg-transparent border-0 d-flex justify-content-between align-items-center">
+                  <div className="d-flex align-items-center">
+                    <div className={`bg-${getTypeColor(template.type)} bg-opacity-10 rounded-circle p-2 me-2`}>
+                      {getTypeIcon(template.type)}
+                    </div>
+                    <Badge bg={getTypeColor(template.type)} className="text-capitalize">
+                      {template.type}
+                    </Badge>
                   </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <button
-                      onClick={() => handleDuplicate(template)}
-                      className="btn btn-sm btn-outline-secondary"
-                      title="Duplicate"
-                    >
-                      <Copy size={14} />
-                    </button>
-                    
-                    <Link
-                      to={`/panel/templates/preview/${template.id}`}
-                      className="btn btn-sm btn-outline-secondary"
-                      title="Preview"
-                    >
-                      <Eye size={14} />
-                    </Link>
-                    <Link
+                  {template.is_default && (
+                    <Badge bg="warning">Default</Badge>
+                  )}
+                </Card.Header>
+                <Card.Body>
+                  <h6 className="fw-bold text-dark mb-2">{template.title}</h6>
+                  <p className="text-muted small mb-3">
+                    {stripHtml(template.body_html).substring(0, 100)}
+                    {stripHtml(template.body_html).length > 100 && '...'}
+                  </p>
+                  <small className="text-muted">
+                    Created {new Date(template.created_at).toLocaleDateString()}
+                  </small>
+                </Card.Body>
+                <Card.Footer className="bg-transparent border-0">
+                  <div className="d-flex gap-2">
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      as={Link}
                       to={`/panel/templates/edit/${template.id}`}
-                      className="btn btn-sm btn-outline-primary"
-                      title="Edit"
                     >
                       <Edit size={14} />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      className="btn btn-sm btn-outline-danger"
-                      title="Delete"
+                    </Button>
+                    <Button
+                      variant="outline-info"
+                      size="sm"
+                      as={Link}
+                      to={`/panel/templates/preview/${template.id}`}
+                    >
+                      <Eye size={14} />
+                    </Button>
+                    {/* <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() => handleDuplicate(template)}
+                    >
+                      <Copy size={14} />
+                    </Button> */}
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={() => {
+                        setTemplateToDelete(template);
+                        setShowDeleteModal(true);
+                      }}
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </Button>
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {filteredTemplates.length === 0 && (
-        <div className="text-center py-5">
-          <FileText className="mx-auto text-muted mb-3" size={48} />
-          <div className="text-muted mb-3">
-            {searchTerm || filterType !== 'all' ? 'No templates match your filters' : 'No templates yet'}
-          </div>
-          {!searchTerm && filterType === 'all' && (
-            <Link
-              to="/panel/templates/new"
-              className="btn btn-outline-primary d-inline-flex align-items-center gap-2"
-            >
-              <Plus size={16} />
-              Create your first template
-            </Link>
-          )}
-        </div>
+                </Card.Footer>
+              </Card>
+            </Col>
+          ))}
+        </Row>
       )}
 
-      {/* Stats */}
-      <div className="row g-4">
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body text-center">
-              <div className="h2 fw-bold text-dark mb-1">{templates.length}</div>
-              <div className="text-muted">Total Templates</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body text-center">
-              <div className="h2 fw-bold text-dark mb-1">
-                {templates.filter(t => t.type === 'email').length}
-              </div>
-              <div className="text-muted">Email Templates</div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card">
-            <div className="card-body text-center">
-              <div className="h2 fw-bold text-dark mb-1">
-                {templates.filter(t => t.type === 'sms').length}
-              </div>
-              <div className="text-muted">SMS Templates</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      {/* Delete Confirmation Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Template</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>Are you sure you want to delete the template "{templateToDelete?.title}"?</p>
+          <Alert variant="warning">
+            <strong>Warning:</strong> This action cannot be undone.
+          </Alert>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete Template
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
+import { Container, Row, Col, Card, Form, Button, InputGroup } from 'react-bootstrap';
 import { authService } from '../services/authService';
 import { Notyf } from 'notyf';
 
@@ -68,187 +69,181 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">EZ</span>
-          </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-            sign in to your existing account
-          </Link>
-        </p>
-      </div>
+    <Container fluid className="min-vh-100 bg-light d-flex align-items-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={8} lg={6}>
+            <Card className="shadow">
+              <Card.Body className="p-4">
+                <div className="text-center mb-4">
+                  <div className="d-inline-flex align-items-center justify-content-center bg-primary rounded-3 mb-3" style={{width: '48px', height: '48px'}}>
+                    <span className="text-white fw-bold fs-5">EZ</span>
+                  </div>
+                  <h2 className="fw-bold text-dark">Create your account</h2>
+                  <p className="text-muted">
+                    Or{' '}
+                    <Link to="/login" className="text-primary text-decoration-none fw-medium">
+                      sign in to your existing account
+                    </Link>
+                  </p>
+                </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your full name"
-                />
-                <User className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-              </div>
-            </div>
+                <Form onSubmit={handleSubmit}>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Full Name</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text>
+                            <User size={16} />
+                          </InputGroup.Text>
+                          <Form.Control
+                            type="text"
+                            name="name"
+                            placeholder="Enter your full name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            required
+                          />
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Email address</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text>
+                            <Mail size={16} />
+                          </InputGroup.Text>
+                          <Form.Control
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                          />
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your email"
-                />
-                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-              </div>
-            </div>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Account Type</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text>
+                            <Building size={16} />
+                          </InputGroup.Text>
+                          <Form.Select
+                            name="userType"
+                            value={formData.userType}
+                            onChange={handleChange}
+                          >
+                            <option value="1">Business Account</option>
+                            <option value="2">Individual Account</option>
+                          </Form.Select>
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Company Logo (Optional)</Form.Label>
+                        <Form.Control
+                          type="file"
+                          name="company_logo"
+                          accept="image/*"
+                          onChange={handleChange}
+                        />
+                        <Form.Text className="text-muted">
+                          PNG, JPG, GIF up to 2MB
+                        </Form.Text>
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-            <div>
-              <label htmlFor="userType" className="block text-sm font-medium text-gray-700">
-                Account Type
-              </label>
-              <div className="mt-1 relative">
-                <select
-                  id="userType"
-                  name="userType"
-                  value={formData.userType}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="1">Business Account</option>
-                  <option value="2">Individual Account</option>
-                </select>
-                <Building className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-              </div>
-            </div>
+                  <Row>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Password</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text>
+                            <Lock size={16} />
+                          </InputGroup.Text>
+                          <Form.Control
+                            type={showPassword ? 'text' : 'password'}
+                            name="password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                          />
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() => setShowPassword(!showPassword)}
+                            type="button"
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </Button>
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                    <Col md={6}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Confirm Password</Form.Label>
+                        <InputGroup>
+                          <InputGroup.Text>
+                            <Lock size={16} />
+                          </InputGroup.Text>
+                          <Form.Control
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="password_confirmation"
+                            placeholder="Confirm your password"
+                            value={formData.password_confirmation}
+                            onChange={handleChange}
+                            required
+                          />
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            type="button"
+                          >
+                            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </Button>
+                        </InputGroup>
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-            <div>
-              <label htmlFor="company_logo" className="block text-sm font-medium text-gray-700">
-                Company Logo (Optional)
-              </label>
-              <div className="mt-1">
-                <input
-                  id="company_logo"
-                  name="company_logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleChange}
-                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
-                <p className="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
-              </div>
-            </div>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-100 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating account...' : 'Create account'}
+                  </Button>
+                </Form>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your password"
-                />
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={formData.password_confirmation}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Confirm your password"
-                />
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Creating account...' : 'Create account'}
-              </button>
-            </div>
-          </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Already have an account?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/login"
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Sign in instead
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+                <hr className="my-4" />
+                
+                <div className="text-center">
+                  <p className="text-muted small mb-3">Already have an account?</p>
+                  <Link
+                    to="/login"
+                    className="btn btn-outline-secondary w-100"
+                  >
+                    Sign in instead
+                  </Link>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </Container>
   );
 };
 

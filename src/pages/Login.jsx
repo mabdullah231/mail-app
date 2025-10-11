@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Container, Row, Col, Card, Form, Button, InputGroup } from 'react-bootstrap';
 import { authService } from '../services/authService';
 import { Notyf } from 'notyf';
 
@@ -48,115 +49,101 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">EZ</span>
-          </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <Link to="/register" className="font-medium text-blue-600 hover:text-blue-500">
-            create a new account
-          </Link>
-        </p>
-      </div>
+    <Container fluid className="min-vh-100 bg-light d-flex align-items-center">
+      <Container>
+        <Row className="justify-content-center">
+          <Col md={6} lg={4}>
+            <Card className="shadow">
+              <Card.Body className="p-4">
+                <div className="text-center mb-4">
+                  <div className="d-inline-flex align-items-center justify-content-center bg-primary rounded-3 mb-3" style={{width: '48px', height: '48px'}}>
+                    <span className="text-white fw-bold fs-5">EZ</span>
+                  </div>
+                  <h2 className="fw-bold text-dark">Sign in to your account</h2>
+                  <p className="text-muted">
+                    Or{' '}
+                    <Link to="/register" className="text-primary text-decoration-none fw-medium">
+                      create a new account
+                    </Link>
+                  </p>
+                </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email address
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your email"
-                />
-                <Mail className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-              </div>
-            </div>
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email address</Form.Label>
+                    <InputGroup>
+                      <InputGroup.Text>
+                        <Mail size={16} />
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="email"
+                        name="email"
+                        placeholder="Enter your email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        required
+                      />
+                    </InputGroup>
+                  </Form.Group>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter your password"
-                />
-                <Lock className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Password</Form.Label>
+                    <InputGroup>
+                      <InputGroup.Text>
+                        <Lock size={16} />
+                      </InputGroup.Text>
+                      <Form.Control
+                        type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        placeholder="Enter your password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => setShowPassword(!showPassword)}
+                        type="button"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </Button>
+                    </InputGroup>
+                  </Form.Group>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                  Forgot your password?
-                </Link>
-              </div>
-            </div>
+                  <div className="d-flex justify-content-between align-items-center mb-3">
+                    <Link to="/forgot-password" className="text-primary text-decoration-none small">
+                      Forgot your password?
+                    </Link>
+                  </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </div>
-          </form>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-100 mb-3"
+                    disabled={loading}
+                  >
+                    {loading ? 'Signing in...' : 'Sign in'}
+                  </Button>
+                </Form>
 
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">New to Email Zus?</span>
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <Link
-                to="/register"
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Create new account
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+                <hr className="my-4" />
+                
+                <div className="text-center">
+                  <p className="text-muted small mb-3">New to Email Zus?</p>
+                  <Link
+                    to="/register"
+                    className="btn btn-outline-secondary w-100"
+                  >
+                    Create new account
+                  </Link>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </Container>
   );
 };
 

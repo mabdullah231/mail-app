@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, User, Mail, Phone, MapPin, Bell, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, Alert, InputGroup } from 'react-bootstrap';
 import { customerService } from '../services/customerService';
 import { companyService } from '../services/companyService';
 import { templateService } from '../services/templateService';

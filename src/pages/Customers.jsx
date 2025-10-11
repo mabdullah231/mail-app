@@ -11,6 +11,7 @@ import {
   Download,
   MoreHorizontal
 } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, InputGroup, Badge, Modal, Table, Alert } from 'react-bootstrap';
 import { customerService } from '../services/customerService';
 import { companyService } from '../services/companyService';
 import { Notyf } from 'notyf';
@@ -270,7 +271,7 @@ const Customers = () => {
                     <td>
                       <div className="d-flex gap-2">
                         <Link
-                          to={`/panel/customer/${customer.id}/edit`}
+                          to={`/panel/customers/edit/${customer.id}`}
                           className="btn btn-sm btn-outline-primary"
                           title="Edit"
                         >
@@ -283,9 +284,9 @@ const Customers = () => {
                         >
                           <Trash2 size={14} />
                         </button>
-                        <button className="btn btn-sm btn-outline-secondary" title="More">
+                        {/* <button className="btn btn-sm btn-outline-secondary" title="More">
                           <MoreHorizontal size={14} />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

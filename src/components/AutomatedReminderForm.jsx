@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock } from 'react-feather';
+import { Calendar, Clock, Save, X } from 'react-feather';
 import DatePicker from 'react-datepicker';
 import NotificationRulesSelector from './NotificationRulesSelector';
 import { reminderService } from '../services/reminderService';
@@ -66,51 +66,56 @@ const AutomatedReminderForm = ({ customerId, onSuccess, onCancel }) => {
   };
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-lg font-medium text-gray-900 mb-4">Create Automated Reminder</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          <div>
-            <label htmlFor="template_id" className="block text-sm font-medium text-gray-700 mb-1">
-              Template
-            </label>
-            <select
-              id="template_id"
-              name="template_id"
-              value={formData.template_id}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select a template</option>
-              {templates.map(template => (
-                <option key={template.id} value={template.id}>
-                  {template.title} ({template.type})
-                </option>
-              ))}
-            </select>
-          </div>
+    <div className="card">
+      <div className="card-header">
+        <h5 className="card-title mb-0">Create Automated Reminder</h5>
+      </div>
+      <div className="card-body">
+        <form onSubmit={handleSubmit}>
+          <div className="row g-3">
+            {/* Template Selection */}
+            <div className="col-12">
+              <label htmlFor="template_id" className="form-label">
+                Template
+              </label>
+              <select
+                id="template_id"
+                name="template_id"
+                value={formData.template_id}
+                onChange={handleInputChange}
+                className="form-select"
+                required
+              >
+                <option value="">Select a template</option>
+                {templates.map(template => (
+                  <option key={template.id} value={template.id}>
+                    {template.title} ({template.type})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-1">
+            {/* Start Date and Frequency */}
+            <div className="col-md-6">
+              <label htmlFor="start_date" className="form-label">
                 Start Date
               </label>
-              <div className="relative">
+              <div className="input-group">
                 <DatePicker
                   id="start_date"
                   selected={formData.start_date}
                   onChange={(date) => setFormData({...formData, start_date: date})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className="form-control"
                   dateFormat="yyyy-MM-dd"
                 />
-                <Calendar className="absolute right-3 top-2.5 text-gray-400" size={16} />
+                <span className="input-group-text">
+                  <Calendar size={16} className="text-muted" />
+                </span>
               </div>
             </div>
 
-            <div>
-              <label htmlFor="frequency" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="col-md-6">
+              <label htmlFor="frequency" className="form-label">
                 Frequency
               </label>
               <select
@@ -118,7 +123,7 @@ const AutomatedReminderForm = ({ customerId, onSuccess, onCancel }) => {
                 name="frequency"
                 value={formData.frequency}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="form-select"
               >
                 <option value="Daily">Daily</option>
                 <option value="3 days">Every 3 days</option>
@@ -127,58 +132,78 @@ const AutomatedReminderForm = ({ customerId, onSuccess, onCancel }) => {
                 <option value="one-time">One-time only</option>
               </select>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="expires_at" className="block text-sm font-medium text-gray-700 mb-1">
-              End Date (Optional)
-            </label>
-            <div className="relative">
-              <DatePicker
-                id="expires_at"
-                selected={formData.expires_at}
-                onChange={(date) => setFormData({...formData, expires_at: date})}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                dateFormat="yyyy-MM-dd"
-                placeholderText="Never expires"
-                isClearable
+            {/* End Date */}
+            <div className="col-12">
+              <label htmlFor="expires_at" className="form-label">
+                End Date <small className="text-muted">(Optional)</small>
+              </label>
+              <div className="input-group">
+                <DatePicker
+                  id="expires_at"
+                  selected={formData.expires_at}
+                  onChange={(date) => setFormData({...formData, expires_at: date})}
+                  className="form-control"
+                  dateFormat="yyyy-MM-dd"
+                  placeholderText="Never expires"
+                  isClearable
+                />
+                <span className="input-group-text">
+                  <Clock size={16} className="text-muted" />
+                </span>
+              </div>
+            </div>
+
+            {/* Notification Rules */}
+            <div className="col-12">
+              <label className="form-label">
+                Notification Rules
+              </label>
+              <NotificationRulesSelector
+                value={formData.notification_rules}
+                onChange={(rules) => setFormData({...formData, notification_rules: rules})}
               />
-              <Clock className="absolute right-3 top-2.5 text-gray-400" size={16} />
+              <div className="form-text">
+                Set when notifications should be sent relative to the event date
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="col-12">
+              <div className="d-flex justify-content-end gap-2 pt-3 border-top">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="btn btn-outline-secondary d-flex align-items-center"
+                  disabled={loading}
+                >
+                  <X size={16} className="me-1" />
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary d-flex align-items-center"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <div className="spinner-border spinner-border-sm me-2" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} className="me-1" />
+                      Create Reminder
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notification Rules
-            </label>
-            <NotificationRulesSelector
-              value={formData.notification_rules}
-              onChange={(rules) => setFormData({...formData, notification_rules: rules})}
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Set when notifications should be sent relative to the event date
-            </p>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={loading}
-            >
-              {loading ? 'Creating...' : 'Create Reminder'}
-            </button>
-          </div>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

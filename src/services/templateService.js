@@ -4,7 +4,10 @@ import api from '../config/api';
 export const templateService = {
   // Get all templates for a company
   getAll: async (companyId) => {
+   
     const response = await api.get(`/templates?company_id=${companyId}`);
+    console.log('data of templates',response.data);
+    
     return response.data;
   },
 

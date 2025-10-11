@@ -205,6 +205,8 @@ const PanelWrapper = () => {
     transition: all 0.3s ease;
     background-color: #fff;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
   }
   
   .iq-top-navbar {
@@ -240,6 +242,19 @@ const PanelWrapper = () => {
   
     .iq-top-navbar {
       margin-left: 0 !important;
+    }
+    
+    .data-scrollbar {
+      height: calc(100vh - 60px);
+      max-height: calc(100vh - 60px);
+    }
+  }
+  
+  /* Small laptop screens */
+  @media (max-width: 1366px) and (min-width: 992px) {
+    .data-scrollbar {
+      height: calc(100vh - 60px);
+      max-height: calc(100vh - 60px);
     }
   }
   
@@ -385,11 +400,44 @@ const PanelWrapper = () => {
   .data-scrollbar {
     overflow-y: auto;
     height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+  }
+  
+  .data-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .data-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  .data-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+  }
+  
+  .data-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
   }
 
   /* Dark mode styles */
   .dark .iq-sidebar {
     background-color: #1a1a1a;
+  }
+  
+  .dark .data-scrollbar::-webkit-scrollbar-track {
+    background: #2a2a2a;
+  }
+  
+  .dark .data-scrollbar::-webkit-scrollbar-thumb {
+    background: #555;
+  }
+  
+  .dark .data-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #777;
   }
 
   .dark .sidebar-menu .menu-item a {
@@ -519,10 +567,9 @@ const PanelWrapper = () => {
           </div>
         </div>
 
-        <div className="data-scrollbar">
-          <nav className="iq-sidebar-menu">
-            <ul className="sidebar-menu">
-              <ul className="sidebar-menu">
+        <div className="data-scrollbar" style={{flex: 1, overflow: 'hidden'}}>
+          <nav className="iq-sidebar-menu" style={{height: '100%'}}>
+            <ul className="sidebar-menu" style={{height: '100%', overflow: 'auto'}}>
   {roleBasedRoutes.map((route, index) => {
     const isActive = isRouteActive(route.path);
     const hasChildren = route.children && route.children.length > 0;
@@ -574,66 +621,6 @@ const PanelWrapper = () => {
       </React.Fragment>
     );
   })}
-</ul>
-
-
-              {/* <li>
-                <a
-                  href="#auth"
-                  className={classNames("collapsed", {
-                    open: openMenu === "auth",
-                  })}
-                  onClick={() => toggleSubMenu("auth")}
-                >
-                  <i className="las la-torah"></i>
-                  <span className="menu-text">Authentication</span>
-                  <i
-                    className={classNames(
-                      "las la-angle-right iq-arrow-right arrow-toggle",
-                      {
-                        rotated: openMenu === "auth",
-                      }
-                    )}
-                  ></i>
-                </a>
-                <ul
-                  id="auth"
-                  className={classNames("iq-submenu", {
-                    show: openMenu === "auth",
-                  })}
-                >
-                  <li>
-                    <a href="auth-sign-in.html">
-                      <i className="las la-sign-in-alt"></i>
-                      <span className="menu-text">Login</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="auth-sign-up.html">
-                      <i className="las la-registered"></i>
-                      <span className="menu-text">Register</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="auth-recoverpw.html">
-                      <i className="las la-unlock-alt"></i>
-                      <span className="menu-text">Recover Password</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="auth-confirm-mail.html">
-                      <i className="las la-envelope-square"></i>
-                      <span className="menu-text">Confirm Mail</span>
-                    </a>
-                  </li>
-                  <li>
-                    <a href="auth-lock-screen.html">
-                      <i className="las la-lock"></i>
-                      <span className="menu-text">Lock Screen</span>
-                    </a>
-                  </li>
-                </ul>
-              </li> */}
             </ul>
           </nav>
         </div>

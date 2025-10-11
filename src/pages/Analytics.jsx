@@ -21,6 +21,7 @@ import {
   Calendar,
   Download
 } from 'lucide-react';
+import { Container, Row, Col, Card, Button, Form, Badge, Alert } from 'react-bootstrap';
 import { emailService } from '../services/emailService';
 import { smsService } from '../services/smsService';
 import { customerService } from '../services/customerService';
