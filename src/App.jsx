@@ -18,11 +18,7 @@ import {
   CodeVerification,
   NewPassword,
   CompanyDetails,
-} from "./screens";
-// Add this import at the top of App.jsx
-import TemplatePreview from './components/Template/TemplatePreview';
-import Helpers from "./config/Helpers";
-import {
+
   Dashboard,
   Customers,
   CustomerForm,
@@ -31,13 +27,11 @@ import {
   Analytics,
   Settings,
   SuperAdmin,
-  // AdminUsers,
   AdminCompanies,
   AdminPricingPlans,
   AdminSettings,
   EmailLogs,
   DonationsLog,
-  // AdminDashboard, // Removed since it's causing the error
   CompanySettings,
   MyPlan,
   DonationPage,
@@ -49,10 +43,15 @@ import {
   SendSMSCampaign,
   CampaignScheduler,
   CompanyEmailLogs,
-  CompanySMSLogs
+  CompanySMSLogs,
 } from "./screens";
+import Home from "./screens/Home";
+import Pricing from "./pages/Pricing";
+import LegalPages from "./screens/LegalPages";
+import TemplatePreview from "./components/Template/TemplatePreview";
 import TemplateForm from "./components/Template/TemplateForm";
 import AuthCallback from "./screens/auth/AuthCallback";
+import Helpers from "./config/Helpers";
 
 const ROLE_MAP = {
   0: "admin",
@@ -105,20 +104,31 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Public Routes */}
+        <Route path="/home" element={<Home />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/privacy-policy" element={<LegalPages />} />
+        <Route path="/terms-conditions" element={<LegalPages />} />
+        <Route path="/user-policy" element={<LegalPages />} />
+
         <Route path="/auth/callback" element={<AuthCallback />} />
-        
-        {/* Root redirect */}
+
+        {/* ✅ FIXED: Single Root Route */}
         <Route
           path="/"
           element={(() => {
             const user = Helpers.getItem("user", true);
             const token = Helpers.getItem("token");
-            return (user && token) ? <Navigate to="/panel" replace /> : <Navigate to="/sign-in" replace />;
+            return user && token ? (
+              <Navigate to="/panel" replace />
+            ) : (
+              <Navigate to="/home" replace />
+            );
           })()}
         />
 
         {/* Login redirect */}
-        <Route path="/login" element={<Navigate to="/sign-in" replace />} />
+        <Route path="/sign-in" element={<Navigate to="/sign-in" replace />} />
 
         {/* Public Auth Routes */}
         <Route
@@ -156,31 +166,19 @@ function App() {
         </Route>
 
         {/* Recovery Routes */}
-        <Route
-          path="/forget-password"
-          element={<AuthLayout />}
-        >
+        <Route path="/forget-password" element={<AuthLayout />}>
           <Route index element={<ForgetPassword />} />
         </Route>
 
-        <Route
-          path="/new-password"
-          element={<AuthLayout />}
-        >
+        <Route path="/new-password" element={<AuthLayout />}>
           <Route index element={<NewPassword />} />
         </Route>
 
-        <Route
-          path="/code-verification"
-          element={<AuthLayout />}
-        >
+        <Route path="/code-verification" element={<AuthLayout />}>
           <Route index element={<CodeVerification />} />
         </Route>
 
-        <Route
-          path="/confirm-mail"
-          element={<AuthLayout />}
-        >
+        <Route path="/confirm-mail" element={<AuthLayout />}>
           <Route index element={<ConfirmMail />} />
         </Route>
 
@@ -290,6 +288,7 @@ function App() {
               }
             />
           </Route>
+
           {/* Customer routes */}
           <Route path="customers">
             <Route
@@ -325,7 +324,7 @@ function App() {
               }
             />
           </Route>
-          
+
           <Route
             path="campaigns"
             element={
@@ -350,7 +349,7 @@ function App() {
               </AuthGuard>
             }
           />
-         
+
           <Route
             path="edit-profile"
             element={
@@ -364,22 +363,6 @@ function App() {
             element={
               <AuthGuard requiredRoles={["company"]}>
                 <MyPlan />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="customers"
-            element={
-              <AuthGuard requiredRoles={["company"]}>
-                <Customers />
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="customers/new"
-            element={
-              <AuthGuard requiredRoles={["company"]}>
-                <CustomerForm />
               </AuthGuard>
             }
           />

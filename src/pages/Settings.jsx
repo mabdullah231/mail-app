@@ -12,6 +12,7 @@ import {
   Bell,
   User,
   CreditCard,
+  
 } from "lucide-react";
 import {
   Container,
@@ -25,6 +26,7 @@ import {
   Tab,
   Alert,
   Badge,
+  ListGroup,
 } from "react-bootstrap";
 import { companyService } from "../services/companyService";
 import authService from "../services/authService";
@@ -67,28 +69,28 @@ const Settings = () => {
   const user = getUserData();
 
   useEffect(() => {
-    console.log('Current user from getUserData():', user);
-    console.log('LocalStorage user:', localStorage.getItem('user'));
-    console.log('LocalStorage token:', localStorage.getItem('token'));
+    console.log("Current user from getUserData():", user);
+    console.log("LocalStorage user:", localStorage.getItem("user"));
+    console.log("LocalStorage token:", localStorage.getItem("token"));
     loadData();
   }, []);
 
   // Also add this to see the profile state
-useEffect(() => {
-  console.log('Profile state updated:', profile);
-}, [profile]);
+  useEffect(() => {
+    console.log("Profile state updated:", profile);
+  }, [profile]);
 
   const loadData = async () => {
     try {
       const [companyData, subscriptionData, profileData] = await Promise.all([
         companyService.getDetails(),
         subscriptionService.getCurrent(),
-        authService.getProfile().catch(error => { 
-          console.error('Error fetching profile:', error);
+        authService.getProfile().catch((error) => {
+          console.error("Error fetching profile:", error);
           return { user: user?.user || {} }; // Fallback to localStorage user
-        })
+        }),
       ]);
-  
+
       // Make sure to set the company data properly
       if (companyData.company) {
         setCompany((prev) => ({
@@ -100,18 +102,19 @@ useEffect(() => {
           phone: companyData.company.phone || "",
           country: companyData.company.country || "",
           business_email: companyData.company.business_email || "",
-          business_email_password: companyData.company.business_email_password || "",
+          business_email_password:
+            companyData.company.business_email_password || "",
           smtp_host: companyData.company.smtp_host || "",
           smtp_port: companyData.company.smtp_port || "",
           smtp_encryption: companyData.company.smtp_encryption || "tls",
         }));
       }
-  
+
       setSubscription(subscriptionData);
-  
+
       // Use profile data from API or fallback to localStorage
       const userProfile = profileData.user || user?.user || {};
-      
+
       setProfile({
         name: userProfile.name || "",
         email: userProfile.email || "",
@@ -119,8 +122,8 @@ useEffect(() => {
         new_password: "",
         confirm_password: "",
       });
-  
-      console.log('Profile data loaded:', userProfile); // Debug log
+
+      console.log("Profile data loaded:", userProfile); // Debug log
     } catch (error) {
       console.error("Error loading data:", error);
     }
@@ -293,11 +296,11 @@ useEffect(() => {
   const handleEmailSettingsSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-  
+
     try {
       // Create FormData for file uploads
       const formData = new FormData();
-  
+
       // Add all company fields including email settings
       formData.append("name", company.name || "");
       formData.append("email", company.email || "");
@@ -312,17 +315,17 @@ useEffect(() => {
       formData.append("smtp_host", company.smtp_host || "");
       formData.append("smtp_port", company.smtp_port || "");
       formData.append("smtp_encryption", company.smtp_encryption || "tls");
-  
+
       // Add logo file if exists (to preserve it)
       if (company.logo && typeof company.logo !== "string") {
         formData.append("logo", company.logo);
       }
-  
+
       // Add signature file if exists (to preserve it)
       if (company.signature && typeof company.signature !== "string") {
         formData.append("signature", company.signature);
       }
-  
+
       await companyService.storeOrUpdate(formData);
       notyf.success("Email settings updated successfully");
       loadData();
@@ -708,395 +711,449 @@ useEffect(() => {
               </Tab.Pane>
 
               {/* Email Settings Tab */}
-<Tab.Pane eventKey="email">
-  <Card className="border-0 shadow-sm">
-    <Card.Header className="bg-transparent border-0">
-      <h5 className="mb-0">
-        <Mail size={20} className="me-2" />
-        Email Settings
-      </h5>
-    </Card.Header>
-    <Card.Body>
-      <Alert variant="info">
-        <Bell size={16} className="me-2" />
-        Configure your business email settings to send emails from your domain.
-      </Alert>
+              <Tab.Pane eventKey="email">
+                <Card className="border-0 shadow-sm">
+                  <Card.Header className="bg-transparent border-0">
+                    <h5 className="mb-0">
+                      <Mail size={20} className="me-2" />
+                      Email Settings
+                    </h5>
+                  </Card.Header>
+                  <Card.Body>
+                    <Alert variant="info">
+                      <Bell size={16} className="me-2" />
+                      Configure your business email settings to send emails from
+                      your domain.
+                    </Alert>
 
-      {/* Add onSubmit handler to the form */}
-      <Form onSubmit={handleEmailSettingsSubmit}>
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>Business Email</Form.Label>
-              <Form.Control
-                type="email"
-                value={company.business_email}
-                onChange={(e) =>
-                  setCompany((prev) => ({
-                    ...prev,
-                    business_email: e.target.value,
-                  }))
-                }
-                placeholder="support@yourcompany.com"
-              />
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>SMTP Host</Form.Label>
-              <Form.Control
-                type="text"
-                value={company.smtp_host}
-                onChange={(e) =>
-                  setCompany((prev) => ({
-                    ...prev,
-                    smtp_host: e.target.value,
-                  }))
-                }
-                placeholder="smtp.gmail.com"
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+                    {/* Add onSubmit handler to the form */}
+                    <Form onSubmit={handleEmailSettingsSubmit}>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Business Email</Form.Label>
+                            <Form.Control
+                              type="email"
+                              value={company.business_email}
+                              onChange={(e) =>
+                                setCompany((prev) => ({
+                                  ...prev,
+                                  business_email: e.target.value,
+                                }))
+                              }
+                              placeholder="support@yourcompany.com"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>SMTP Host</Form.Label>
+                            <Form.Control
+                              type="text"
+                              value={company.smtp_host}
+                              onChange={(e) =>
+                                setCompany((prev) => ({
+                                  ...prev,
+                                  smtp_host: e.target.value,
+                                }))
+                              }
+                              placeholder="smtp.gmail.com"
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
 
-        <Row>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>SMTP Port</Form.Label>
-              <Form.Control
-                type="number"
-                value={company.smtp_port}
-                onChange={(e) =>
-                  setCompany((prev) => ({
-                    ...prev,
-                    smtp_port: e.target.value,
-                  }))
-                }
-                placeholder="587"
-              />
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group className="mb-3">
-              <Form.Label>Encryption</Form.Label>
-              <Form.Select
-                value={company.smtp_encryption}
-                onChange={(e) =>
-                  setCompany((prev) => ({
-                    ...prev,
-                    smtp_encryption: e.target.value,
-                  }))
-                }
-              >
-                <option value="tls">TLS</option>
-                <option value="ssl">SSL</option>
-                <option value="none">None</option>
-              </Form.Select>
-            </Form.Group>
-          </Col>
-        </Row>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>SMTP Port</Form.Label>
+                            <Form.Control
+                              type="number"
+                              value={company.smtp_port}
+                              onChange={(e) =>
+                                setCompany((prev) => ({
+                                  ...prev,
+                                  smtp_port: e.target.value,
+                                }))
+                              }
+                              placeholder="587"
+                            />
+                          </Form.Group>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Encryption</Form.Label>
+                            <Form.Select
+                              value={company.smtp_encryption}
+                              onChange={(e) =>
+                                setCompany((prev) => ({
+                                  ...prev,
+                                  smtp_encryption: e.target.value,
+                                }))
+                              }
+                            >
+                              <option value="tls">TLS</option>
+                              <option value="ssl">SSL</option>
+                              <option value="none">None</option>
+                            </Form.Select>
+                          </Form.Group>
+                        </Col>
+                      </Row>
 
-        <Form.Group className="mb-3">
-          <Form.Label>Email Password</Form.Label>
-          <InputGroup>
-            <Form.Control
-              type={
-                showPasswords.business_email ? "text" : "password"
-              }
-              value={company.business_email_password}
-              onChange={(e) =>
-                setCompany((prev) => ({
-                  ...prev,
-                  business_email_password: e.target.value,
-                }))
-              }
-              placeholder="App password or email password"
-            />
-            <Button
-              variant="outline-secondary"
-              onClick={() =>
-                togglePasswordVisibility("business_email")
-              }
-            >
-              {showPasswords.business_email ? (
-                <EyeOff size={16} />
-              ) : (
-                <Eye size={16} />
-              )}
-            </Button>
-          </InputGroup>
-          <Form.Text className="text-muted">
-            Use app password for Gmail or your email password
-          </Form.Text>
-        </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Email Password</Form.Label>
+                        <InputGroup>
+                          <Form.Control
+                            type={
+                              showPasswords.business_email ? "text" : "password"
+                            }
+                            value={company.business_email_password}
+                            onChange={(e) =>
+                              setCompany((prev) => ({
+                                ...prev,
+                                business_email_password: e.target.value,
+                              }))
+                            }
+                            placeholder="App password or email password"
+                          />
+                          <Button
+                            variant="outline-secondary"
+                            onClick={() =>
+                              togglePasswordVisibility("business_email")
+                            }
+                          >
+                            {showPasswords.business_email ? (
+                              <EyeOff size={16} />
+                            ) : (
+                              <Eye size={16} />
+                            )}
+                          </Button>
+                        </InputGroup>
+                        <Form.Text className="text-muted">
+                          Use app password for Gmail or your email password
+                        </Form.Text>
+                      </Form.Group>
 
-        {/* Change to type="submit" */}
-        <Button type="submit" variant="primary" disabled={loading}>
-          <Save size={16} className="me-2" />
-          {loading ? "Saving..." : "Save Email Settings"}
-        </Button>
-      </Form>
-    </Card.Body>
-  </Card>
-</Tab.Pane>
+                      {/* Change to type="submit" */}
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={loading}
+                      >
+                        <Save size={16} className="me-2" />
+                        {loading ? "Saving..." : "Save Email Settings"}
+                      </Button>
+                    </Form>
+                  </Card.Body>
+                </Card>
+              </Tab.Pane>
 
               {/* Subscription Tab */}
               {/* Subscription Tab */}
-<Tab.Pane eventKey="subscription">
-  <Card className="border-0 shadow-sm">
-    <Card.Header className="bg-transparent border-0 py-3">
-      <div className="d-flex align-items-center">
-        <CreditCard size={20} className="me-2 text-primary" />
-        <h5 className="mb-0 fw-semibold">Subscription & Billing</h5>
-      </div>
-    </Card.Header>
-    <Card.Body className="p-4">
-      {subscription ? (
-        <div className="row">
-          <div className="col-12">
-            <Alert variant="success" className="border-0 shadow-sm">
-              <div className="d-flex">
-                <div className="flex-grow-1">
-                  <div className="d-flex align-items-center mb-2">
-                    <Badge bg="success" className="me-2">
-                      <i className="fas fa-crown me-1"></i>
-                      ACTIVE
-                    </Badge>
-                    <h6 className="alert-heading mb-0 fw-bold text-success">Premium Subscription</h6>
-                  </div>
-                  <Row className="g-3">
-                    <Col md={6}>
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded p-2 me-3">
-                          <CreditCard size={18} className="text-success" />
-                        </div>
-                        <div>
-                          <small className="text-muted d-block">Plan Type</small>
-                          <strong className="text-dark">{subscription.plan_type || 'Premium'}</strong>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded p-2 me-3">
-                          <i className="fas fa-dollar-sign text-success"></i>
-                        </div>
-                        <div>
-                          <small className="text-muted d-block">Monthly Cost</small>
-                          <strong className="text-dark">${subscription.amount || '5'}/month</strong>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded p-2 me-3">
-                          <i className="fas fa-calendar-check text-success"></i>
-                        </div>
-                        <div>
-                          <small className="text-muted d-block">Expires On</small>
-                          <strong className="text-dark">
-                            {new Date(subscription.expires_at).toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric'
-                            })}
-                          </strong>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <div className="d-flex align-items-center">
-                        <div className="bg-light rounded p-2 me-3">
-                          <i className="fas fa-sync text-success"></i>
-                        </div>
-                        <div>
-                          <small className="text-muted d-block">Billing Cycle</small>
-                          <strong className="text-dark">Monthly</strong>
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
-                </div>
-              </div>
-            </Alert>
-          </div>
-          
-          <div className="col-12 mt-4">
-            <Card className="border">
-              <Card.Header className="bg-light">
-                <h6 className="mb-0 fw-semibold">Subscription Management</h6>
-              </Card.Header>
-              <Card.Body>
-                <Row className="g-3">
-                  <Col md={6}>
-                    <div className="d-grid">
-                      <Button 
-                        variant="outline-danger" 
-                        size="lg"
-                        className="d-flex align-items-center justify-content-center"
-                      >
-                        <i className="fas fa-times-circle me-2"></i>
-                        Cancel Subscription
-                      </Button>
-                      <Form.Text className="text-muted text-center mt-1">
-                        Cancel at the end of billing period
-                      </Form.Text>
+              <Tab.Pane eventKey="subscription">
+                <Card className="border-0 shadow-sm">
+                  <Card.Header className="bg-transparent border-0 py-3">
+                    <div className="d-flex align-items-center">
+                      <CreditCard size={20} className="me-2 text-primary" />
+                      <h5 className="mb-0 fw-semibold">
+                        Subscription & Billing
+                      </h5>
                     </div>
-                  </Col>
-                  <Col md={6}>
-                    <div className="d-grid">
-                      <Button 
-                        variant="outline-primary" 
-                        size="lg"
-                        className="d-flex align-items-center justify-content-center"
-                      >
-                        <i className="fas fa-credit-card me-2"></i>
-                        Update Payment Method
-                      </Button>
-                      <Form.Text className="text-muted text-center mt-1">
-                        Change your payment details
-                      </Form.Text>
-                    </div>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </div>
-        </div>
-      ) : (
-        <div className="row">
-          <div className="col-12 mb-4">
-            <Alert variant="info" className="border-0">
-              <div className="d-flex align-items-center">
-                <div className="flex-shrink-0">
-                  <i className="fas fa-info-circle fa-lg"></i>
-                </div>
-                <div className="flex-grow-1 ms-3">
-                  <h6 className="alert-heading mb-2">Free Plan Active</h6>
-                  <p className="mb-2">
-                    You're currently enjoying our free plan with essential features. 
-                    Upgrade to unlock premium capabilities and remove branding.
-                  </p>
-                  <hr />
-                  <div className="row text-center">
-                    <div className="col-md-4 mb-2">
-                      <small className="text-muted d-block">Email Limits</small>
-                      <strong>50/month</strong>
-                    </div>
-                    <div className="col-md-4 mb-2">
-                      <small className="text-muted d-block">SMS Limits</small>
-                      <strong>10/month</strong>
-                    </div>
-                    <div className="col-md-4 mb-2">
-                      <small className="text-muted d-block">Branding</small>
-                      <strong>Included</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Alert>
-          </div>
+                  </Card.Header>
+                  <Card.Body className="p-4">
+                    {subscription ? (
+                      <div className="row">
+                        <div className="col-12">
+                          <Alert
+                            variant="success"
+                            className="border-0 shadow-sm"
+                          >
+                            <div className="d-flex">
+                              <div className="flex-grow-1">
+                                <div className="d-flex align-items-center mb-2">
+                                  <Badge bg="success" className="me-2">
+                                    <i className="fas fa-crown me-1"></i>
+                                    ACTIVE
+                                  </Badge>
+                                  <h6 className="alert-heading mb-0 fw-bold text-success">
+                                    Premium Subscription
+                                  </h6>
+                                </div>
+                                <Row className="g-3">
+                                  <Col md={6}>
+                                    <div className="d-flex align-items-center">
+                                      <div className="bg-light rounded p-2 me-3">
+                                        <CreditCard
+                                          size={18}
+                                          className="text-success"
+                                        />
+                                      </div>
+                                      <div>
+                                        <small className="text-muted d-block">
+                                          Plan Type
+                                        </small>
+                                        <strong className="text-dark">
+                                          {subscription.plan_type || "Premium"}
+                                        </strong>
+                                      </div>
+                                    </div>
+                                  </Col>
+                                  <Col md={6}>
+                                    <div className="d-flex align-items-center">
+                                      <div className="bg-light rounded p-2 me-3">
+                                        <i className="fas fa-dollar-sign text-success"></i>
+                                      </div>
+                                      <div>
+                                        <small className="text-muted d-block">
+                                          Monthly Cost
+                                        </small>
+                                        <strong className="text-dark">
+                                          ${subscription.amount || "5"}/month
+                                        </strong>
+                                      </div>
+                                    </div>
+                                  </Col>
+                                  <Col md={6}>
+                                    <div className="d-flex align-items-center">
+                                      <div className="bg-light rounded p-2 me-3">
+                                        <i className="fas fa-calendar-check text-success"></i>
+                                      </div>
+                                      <div>
+                                        <small className="text-muted d-block">
+                                          Expires On
+                                        </small>
+                                        <strong className="text-dark">
+                                          {new Date(
+                                            subscription.expires_at
+                                          ).toLocaleDateString("en-US", {
+                                            year: "numeric",
+                                            month: "long",
+                                            day: "numeric",
+                                          })}
+                                        </strong>
+                                      </div>
+                                    </div>
+                                  </Col>
+                                  <Col md={6}>
+                                    <div className="d-flex align-items-center">
+                                      <div className="bg-light rounded p-2 me-3">
+                                        <i className="fas fa-sync text-success"></i>
+                                      </div>
+                                      <div>
+                                        <small className="text-muted d-block">
+                                          Billing Cycle
+                                        </small>
+                                        <strong className="text-dark">
+                                          Monthly
+                                        </strong>
+                                      </div>
+                                    </div>
+                                  </Col>
+                                </Row>
+                              </div>
+                            </div>
+                          </Alert>
+                        </div>
 
-          <div className="col-lg-8 mx-auto">
-            <Card className="border-primary shadow-sm">
-              <Card.Header className="bg-primary text-white py-3">
-                <div className="d-flex align-items-center justify-content-between">
-                  <h6 className="mb-0 fw-bold">
-                    <i className="fas fa-crown me-2"></i>
-                    Remove Branding & Premium Features
-                  </h6>
-                  <Badge bg="light" text="dark" className="fs-6">
-                    RECOMMENDED
-                  </Badge>
-                </div>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <div className="text-center mb-4">
-                  <div className="display-4 fw-bold text-primary mb-2">$5</div>
-                  <div className="text-muted mb-3">per month</div>
-                  <Badge bg="success" className="fs-6">
-                    <i className="fas fa-check me-1"></i>
-                    Cancel anytime
-                  </Badge>
-                </div>
-
-                <div className="mb-4">
-                  <h6 className="fw-semibold mb-3">What's Included:</h6>
-                  <ListGroup variant="flush" className="mb-3">
-                    <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
-                      <i className="fas fa-check text-success me-3"></i>
-                      <span>Remove "Powered by Email Zus" branding</span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
-                      <i className="fas fa-check text-success me-3"></i>
-                      <span>Unlimited email campaigns</span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
-                      <i className="fas fa-check text-success me-3"></i>
-                      <span>Advanced analytics & reporting</span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
-                      <i className="fas fa-check text-success me-3"></i>
-                      <span>Priority email support</span>
-                    </ListGroup.Item>
-                    <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
-                      <i className="fas fa-check text-success me-3"></i>
-                      <span>Custom email templates</span>
-                    </ListGroup.Item>
-                  </ListGroup>
-                </div>
-
-                <div className="d-grid">
-                  <Button 
-                    variant="primary" 
-                    size="lg"
-                    onClick={handleSubscribeBrandingRemoval}
-                    disabled={loading}
-                    className="fw-semibold py-3"
-                  >
-                    {loading ? (
-                      <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Processing...
-                      </>
+                        <div className="col-12 mt-4">
+                          <Card className="border">
+                            <Card.Header className="bg-light">
+                              <h6 className="mb-0 fw-semibold">
+                                Subscription Management
+                              </h6>
+                            </Card.Header>
+                            <Card.Body>
+                              <Row className="g-3">
+                                <Col md={6}>
+                                  <div className="d-grid">
+                                    <Button
+                                      variant="outline-danger"
+                                      size="lg"
+                                      className="d-flex align-items-center justify-content-center"
+                                    >
+                                      <i className="fas fa-times-circle me-2"></i>
+                                      Cancel Subscription
+                                    </Button>
+                                    <Form.Text className="text-muted text-center mt-1">
+                                      Cancel at the end of billing period
+                                    </Form.Text>
+                                  </div>
+                                </Col>
+                                <Col md={6}>
+                                  <div className="d-grid">
+                                    <Button
+                                      variant="outline-primary"
+                                      size="lg"
+                                      className="d-flex align-items-center justify-content-center"
+                                    >
+                                      <i className="fas fa-credit-card me-2"></i>
+                                      Update Payment Method
+                                    </Button>
+                                    <Form.Text className="text-muted text-center mt-1">
+                                      Change your payment details
+                                    </Form.Text>
+                                  </div>
+                                </Col>
+                              </Row>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                      </div>
                     ) : (
-                      <>
-                        <CreditCard size={18} className="me-2" />
-                        Subscribe Now - $5/month
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                <div className="text-center mt-3">
-                  <small className="text-muted">
-                    <i className="fas fa-lock me-1"></i>
-                    Secure payment processed by PayPal
-                  </small>
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+                      <div className="row">
+                        <div className="col-12 mb-4">
+                          <Alert variant="info" className="border-0">
+                            <div className="d-flex align-items-center">
+                              <div className="flex-shrink-0">
+                                <i className="fas fa-info-circle fa-lg"></i>
+                              </div>
+                              <div className="flex-grow-1 ms-3">
+                                <h6 className="alert-heading mb-2">
+                                  Free Plan Active
+                                </h6>
+                                <p className="mb-2">
+                                  You're currently enjoying our free plan with
+                                  essential features. Upgrade to unlock premium
+                                  capabilities and remove branding.
+                                </p>
+                                <hr />
+                                <div className="row text-center">
+                                  <div className="col-md-4 mb-2">
+                                    <small className="text-muted d-block">
+                                      Email Limits
+                                    </small>
+                                    <strong>50/month</strong>
+                                  </div>
+                                  <div className="col-md-4 mb-2">
+                                    <small className="text-muted d-block">
+                                      SMS Limits
+                                    </small>
+                                    <strong>10/month</strong>
+                                  </div>
+                                  <div className="col-md-4 mb-2">
+                                    <small className="text-muted d-block">
+                                      Branding
+                                    </small>
+                                    <strong>Included</strong>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Alert>
+                        </div>
 
-          <div className="col-12 mt-4">
-            <Card className="border-0 bg-light">
-              <Card.Body className="text-center py-4">
-                <h6 className="fw-semibold mb-3">Need Help Deciding?</h6>
-                <p className="text-muted mb-3">
-                  Compare all features and choose the perfect plan for your business needs.
-                </p>
-                <Button variant="outline-secondary" size="sm">
-                  <i className="fas fa-chart-bar me-2"></i>
-                  Compare All Plans
-                </Button>
-              </Card.Body>
-            </Card>
-          </div>
-        </div>
-      )}
-    </Card.Body>
-  </Card>
-</Tab.Pane>
+                        <div className="col-lg-8 mx-auto">
+                          <Card className="border-primary shadow-sm">
+                            <Card.Header className="bg-primary text-white py-3">
+                              <div className="d-flex align-items-center justify-content-between">
+                                <h6 className="mb-0 fw-bold">
+                                  <i className="fas fa-crown me-2"></i>
+                                  Remove Branding & Premium Features
+                                </h6>
+                                <Badge bg="light" text="dark" className="fs-6">
+                                  RECOMMENDED
+                                </Badge>
+                              </div>
+                            </Card.Header>
+                            <Card.Body className="p-4">
+                              <div className="text-center mb-4">
+                                <div className="display-4 fw-bold text-primary mb-2">
+                                  $5
+                                </div>
+                                <div className="text-muted mb-3">per month</div>
+                                <Badge bg="success" className="fs-6">
+                                  <i className="fas fa-check me-1"></i>
+                                  Cancel anytime
+                                </Badge>
+                              </div>
+
+                              <div className="mb-4">
+                                <h6 className="fw-semibold mb-3">
+                                  What's Included:
+                                </h6>
+                                <ListGroup variant="flush" className="mb-3">
+                                  <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
+                                    <i className="fas fa-check text-success me-3"></i>
+                                    <span>
+                                      Remove "Powered by Email Zus" branding
+                                    </span>
+                                  </ListGroup.Item>
+                                  <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
+                                    <i className="fas fa-check text-success me-3"></i>
+                                    <span>Unlimited email campaigns</span>
+                                  </ListGroup.Item>
+                                  <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
+                                    <i className="fas fa-check text-success me-3"></i>
+                                    <span>Advanced analytics & reporting</span>
+                                  </ListGroup.Item>
+                                  <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
+                                    <i className="fas fa-check text-success me-3"></i>
+                                    <span>Priority email support</span>
+                                  </ListGroup.Item>
+                                  <ListGroup.Item className="d-flex align-items-center border-0 px-0 py-2">
+                                    <i className="fas fa-check text-success me-3"></i>
+                                    <span>Custom email templates</span>
+                                  </ListGroup.Item>
+                                </ListGroup>
+                              </div>
+
+                              <div className="d-grid">
+                                <Button
+                                  variant="primary"
+                                  size="lg"
+                                  onClick={handleSubscribeBrandingRemoval}
+                                  disabled={loading}
+                                  className="fw-semibold py-3"
+                                >
+                                  {loading ? (
+                                    <>
+                                      <span
+                                        className="spinner-border spinner-border-sm me-2"
+                                        role="status"
+                                      ></span>
+                                      Processing...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <CreditCard size={18} className="me-2" />
+                                      Subscribe Now - $5/month
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+
+                              <div className="text-center mt-3">
+                                <small className="text-muted">
+                                  <i className="fas fa-lock me-1"></i>
+                                  Secure payment processed by PayPal
+                                </small>
+                              </div>
+                            </Card.Body>
+                          </Card>
+                        </div>
+
+                        <div className="col-12 mt-4">
+                          <Card className="border-0 bg-light">
+                            <Card.Body className="text-center py-4">
+                              <h6 className="fw-semibold mb-3">
+                                Need Help Deciding?
+                              </h6>
+                              <p className="text-muted mb-3">
+                                Compare all features and choose the perfect plan
+                                for your business needs.
+                              </p>
+                              <Button variant="outline-secondary" size="sm">
+                                <i className="fas fa-chart-bar me-2"></i>
+                                Compare All Plans
+                              </Button>
+                            </Card.Body>
+                          </Card>
+                        </div>
+                      </div>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Tab.Pane>
             </Tab.Content>
           </Col>
         </Row>

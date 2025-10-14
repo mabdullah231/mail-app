@@ -82,7 +82,7 @@ const Register = () => {
                   <h2 className="fw-bold text-dark">Create your account</h2>
                   <p className="text-muted">
                     Or{' '}
-                    <Link to="/login" className="text-primary text-decoration-none fw-medium">
+                    <Link to="/sign-in" className="text-primary text-decoration-none fw-medium">
                       sign in to your existing account
                     </Link>
                   </p>
@@ -232,7 +232,7 @@ const Register = () => {
                 <div className="text-center">
                   <p className="text-muted small mb-3">Already have an account?</p>
                   <Link
-                    to="/login"
+                    to="/sign-in"
                     className="btn btn-outline-secondary w-100"
                   >
                     Sign in instead
