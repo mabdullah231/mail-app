@@ -298,7 +298,7 @@ const TemplateForm = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div>  
           
             <div className="d-flex justify-content-end gap-2">
               <button

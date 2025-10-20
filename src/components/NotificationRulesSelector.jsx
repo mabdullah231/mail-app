@@ -98,7 +98,6 @@ const NotificationRulesSelector = ({ value = [], onChange }) => {
                 <option value="before">before</option>
                 <option value="after">after</option>
                 <option value="on">on date</option>
-                
               </select>
             </div>
             

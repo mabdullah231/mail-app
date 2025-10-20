@@ -10,13 +10,23 @@ class Helpers {
   static ASSETS_IMAGES_PATH = "/assets/img";
   static DASHBOARD_IMAGES_PATH = "/dashboard/images";
 
-  static authUser = JSON.parse(localStorage.getItem("user")) ?? {};
+  static authUser = (() => {
+    try {
+      const user = localStorage.getItem("user");
+      return user ? JSON.parse(user) : {};
+    } catch (error) {
+      console.warn("Invalid JSON in localStorage for 'user':", error);
+      localStorage.removeItem("user");
+      return {};
+    }
+  })();
+
   static serverFile = (name) => {
     return `${this.basePath}/${name}`;
   };
 
   static refresh() {
-    this.authUser = JSON.parse(localStorage.getItem("user")) ?? {};
+    this.authUser = this.getItem("user", true) ?? {};
   }
 
   static authHeaders = {
@@ -51,20 +61,28 @@ class Helpers {
     };
   }
 
-  static getItem = (data, isJson = false) => {
-    try {
-      if (isJson) {
-        const item = localStorage.getItem(data);
-        return item ? JSON.parse(item) : null;
-      } else {
-        return localStorage.getItem(data);
-      }
-    } catch (error) {
-      console.error(`Error getting item ${data}:`, error);
+ // In Helpers.js - IMPROVED getItem method
+static getItem = (key, isJson = false) => {
+  try {
+    const item = localStorage.getItem(key);
+    
+    if (!item || item === 'null' || item === 'undefined') {
       return null;
     }
-  };
 
+    // Auto-detect JSON or explicitly parse as JSON
+    if (isJson || (item.startsWith('{') && item.endsWith('}')) || (item.startsWith('[') && item.endsWith(']'))) {
+      return JSON.parse(item);
+    }
+    
+    return item;
+  } catch (error) {
+    console.error(`Error getting item ${key}:`, error);
+    // Clean up corrupted data
+    localStorage.removeItem(key);
+    return null;
+  }
+};
   static scrollToTop(smooth = true) {
     window.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
   }
@@ -73,13 +91,21 @@ class Helpers {
     localStorage.removeItem(name);
   };
 
-  static setItem = (key, data, isJson = false) => {
-    if (isJson) {
-      localStorage.setItem(key, JSON.stringify(data));
-    } else {
-      localStorage.setItem(key, data);
+// In Helpers.js - SIMPLIFIED setItem method
+static setItem = (key, data) => {
+  try {
+    if (data === null || data === undefined) {
+      localStorage.removeItem(key);
+      return;
     }
-  };
+    
+    // Always stringify if it's an object or array
+    const value = typeof data === 'object' ? JSON.stringify(data) : data;
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.error(`Error setting item ${key}:`, error);
+  }
+};
 
   static toast = (type, message) => {
     const notyf = new Notyf();
@@ -93,37 +119,32 @@ class Helpers {
     });
   };
 
-
   static loadCSS(hrefs) {
-    hrefs.forEach(href => {
+    hrefs.forEach((href) => {
       if (!document.querySelector(`link[href="${href}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
         link.href = href;
         document.head.appendChild(link);
       }
     });
   }
 
-  
-
-static loadScriptSequential = ({ src, id }) => {
-  return new Promise((resolve, reject) => {
-    if (document.getElementById(id)) {
-      resolve(); // already loaded
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.id = id;
-    script.async = false;
-    script.onload = resolve;
-    script.onerror = reject;
-    document.body.appendChild(script);
-  });
-};
-
-  
+  static loadScriptSequential = ({ src, id }) => {
+    return new Promise((resolve, reject) => {
+      if (document.getElementById(id)) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.id = id;
+      script.async = false;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.body.appendChild(script);
+    });
+  };
 }
 
 export default Helpers;

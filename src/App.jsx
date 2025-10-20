@@ -36,7 +36,6 @@ import {
   MyPlan,
   DonationPage,
   CompanyUsers,
-  NotificationRules,
   EmailTemplates,
   SMSTemplates,
   SendEmailCampaign,
@@ -45,11 +44,13 @@ import {
   CompanyEmailLogs,
   CompanySMSLogs,
 } from "./screens";
+import NotificationRules from "./screens/NotificationRules";
 import Home from "./screens/Home";
 import Pricing from "./pages/Pricing";
 import LegalPages from "./screens/LegalPages";
 import TemplatePreview from "./components/Template/TemplatePreview";
 import TemplateForm from "./components/Template/TemplateForm";
+import NotificationRuleForm from "./components/NotificationRuleForm";
 import AuthCallback from "./screens/auth/AuthCallback";
 import Helpers from "./config/Helpers";
 
@@ -58,6 +59,26 @@ const ROLE_MAP = {
   1: "company",
   2: "user",
 };
+
+// 🔥 CLEANUP: Remove corrupted localStorage on app load (ONE TIME FIX)
+(() => {
+  try {
+    const userItem = localStorage.getItem("user");
+    // Check if it's the corrupted "[object Object]" string
+    if (userItem && (userItem === "[object Object]" || userItem.startsWith("[object"))) {
+      console.warn("🧹 Found corrupted user data, clearing localStorage...");
+      localStorage.clear();
+      return;
+    }
+    // Try to parse - if it fails, clear it
+    if (userItem && userItem !== "null" && userItem !== "undefined") {
+      JSON.parse(userItem);
+    }
+  } catch (error) {
+    console.warn("🧹 Corrupted localStorage detected, clearing auth data:", error.message);
+    localStorage.clear();
+  }
+})();
 
 const CompanyDetailsGuard = ({ children }) => {
   const user = Helpers.getItem("user", true);
@@ -83,11 +104,12 @@ const CompanyDetailsGuard = ({ children }) => {
 const AuthGuard = ({ children, requiredRoles }) => {
   const user = Helpers.getItem("user", true);
   const token = Helpers.getItem("token");
-  const userRole = ROLE_MAP[user?.user_type];
 
   if (!user || !token) {
     return <Navigate to="/sign-in" replace />;
   }
+
+  const userRole = ROLE_MAP[user.user_type];
 
   if (requiredRoles && !requiredRoles.includes(userRole)) {
     return <Navigate to="/panel" replace />;
@@ -113,22 +135,19 @@ function App() {
 
         <Route path="/auth/callback" element={<AuthCallback />} />
 
-        {/* ✅ FIXED: Single Root Route */}
+        {/* Root Route */}
         <Route
           path="/"
           element={(() => {
             const user = Helpers.getItem("user", true);
             const token = Helpers.getItem("token");
-            return user && token ? (
-              <Navigate to="/panel" replace />
-            ) : (
-              <Navigate to="/home" replace />
-            );
+            
+            if (user && token) {
+              return <Navigate to="/panel" replace />;
+            }
+            return <Navigate to="/home" replace />;
           })()}
         />
-
-        {/* Login redirect */}
-        <Route path="/sign-in" element={<Navigate to="/sign-in" replace />} />
 
         {/* Public Auth Routes */}
         <Route
@@ -379,6 +398,14 @@ function App() {
             element={
               <AuthGuard requiredRoles={["company"]}>
                 <NotificationRules />
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="notification-rules/create"
+            element={
+              <AuthGuard requiredRoles={["company"]}>
+                <NotificationRuleForm />
               </AuthGuard>
             }
           />

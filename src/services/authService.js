@@ -1,5 +1,6 @@
 import api from '../config/api';
-import { setUserData } from '../utils/auth'; // Import the function
+import Helpers from '../config/Helpers';
+import { setUserData } from '../utils/auth';
 
 const authService = {
   // Register new user
@@ -9,24 +10,38 @@ const authService = {
   },
 
   // Login user
-  login: async (credentials) => {
-    const response = await api.post('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      setUserData(response.data.user); // Now this will work
-    }
-    return response.data;
-  },
+  // In authService.js - FIXED login method
+login: async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+
+  console.log('🔐 Login Response:', response.data);
+  console.log('👤 User Object:', response.data.user);
+  console.log('🎫 Token:', response.data.token);
+
+  if (response.data.token) {
+    // Use the fixed setItem method
+    Helpers.setItem('token', response.data.token);
+    Helpers.setItem('user', response.data.user); // This will now be properly stringified
+
+    console.log('✅ Saved to localStorage:', {
+      token: localStorage.getItem('token'),
+      user: localStorage.getItem('user') // This should now show proper JSON
+    });
+  }
+
+  return response.data;
+},
 
   // Verify email
   verifyEmail: async (data) => {
     const response = await api.post('/auth/verify-email', data);
+
     if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      setUserData(response.data.user); // Add here too for consistency
+      Helpers.setItem('token', response.data.token);
+      Helpers.setItem('user', response.data.user);
+      setUserData(response.data.user);
     }
+
     return response.data;
   },
 
@@ -59,8 +74,8 @@ const authService = {
     try {
       await api.post('/auth/logout');
     } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      Helpers.removeItem('token');
+      Helpers.removeItem('user');
     }
   },
 
@@ -74,7 +89,7 @@ const authService = {
   updateProfile: async (data) => {
     const response = await api.post('/auth/update-profile', data);
     return response.data;
-  }
+  },
 };
 
 export default authService;
