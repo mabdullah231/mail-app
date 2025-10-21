@@ -1,105 +1,109 @@
-import React, { useState } from "react";
-import { Modal, Button, Table, Card } from "react-bootstrap";
-
-const initialEmailLogs = [
-  {
-    id: 1,
-    recipient: "user1@example.com",
-    subject: "Welcome to Our Service",
-    status: "Delivered",
-    sentAt: "2023-05-15 10:30:45",
-    template: "Welcome Email",
-    openedAt: "2023-05-15 10:32:18",
-  },
-  {
-    id: 2,
-    recipient: "user2@example.com",
-    subject: "Your Monthly Report",
-    status: "Delivered",
-    sentAt: "2023-05-14 09:15:22",
-    template: "Monthly Report",
-    openedAt: "2023-05-14 09:20:05",
-  },
-  {
-    id: 3,
-    recipient: "user3@example.com",
-    subject: "Donation Receipt",
-    status: "Failed",
-    sentAt: "2023-05-13 14:45:10",
-    template: "Receipt Template",
-    openedAt: null,
-  },
-];
+import React, { useEffect, useState } from "react";
+import { Modal, Button, Table, Card, Spinner, Alert } from "react-bootstrap";
+import { emailService } from "../../services/emailService";
 
 const EmailLogs = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [viewLog, setViewLog] = useState(null);
+
+  useEffect(() => {
+    const loadLogs = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await emailService.getLogs();
+        const mapped = (data || []).map((item) => ({
+          id: item.id,
+          recipient: item.customer?.email || "",
+          subject: item.subject || "",
+          status:
+            item.status === "sent"
+              ? "Delivered"
+              : item.status === "failed"
+              ? "Failed"
+              : item.status || "Pending",
+          sentAt: item.sent_at || item.created_at,
+          template: item.template?.name || "",
+        }));
+        setLogs(mapped);
+      } catch (e) {
+        setError(e?.response?.data?.message || e.message || "Failed to load logs");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLogs();
+  }, []);
+
+  const handleExportCsv = async () => {
+    try {
+      const blob = await emailService.exportLogs();
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `email_logs_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export email logs CSV', err);
+      alert('Failed to export CSV. Please try again.');
+    }
+  };
 
   return (
     <div className="container-fluid mt-4">
       <Card>
-        <Card.Header>
-          <h4 className="card-title mb-0">Email Logs</h4>
+        <Card.Header className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">Email Logs</h5>
+          <Button variant="primary" onClick={handleExportCsv}>Export CSV</Button>
         </Card.Header>
         <Card.Body>
-          <Table striped bordered responsive className="text-center">
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Subject</th>
-                <th>Status</th>
-                <th>Sent At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {initialEmailLogs.map((log) => (
-                <tr key={log.id}>
-                  <td>{log.recipient}</td>
-                  <td>{log.subject}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        log.status === "Delivered"
-                          ? "bg-success"
-                          : log.status === "Failed"
-                          ? "bg-danger"
-                          : "bg-warning"
-                      }`}
-                    >
-                      {log.status}
-                    </span>
-                  </td>
-                  <td>{log.sentAt}</td>
-                  <td>
-                    <Button
-                      variant="info"
-                      size="sm"
-                      onClick={() => setViewLog(log)}
-                    >
-                      <i className="ri-eye-line me-1"></i>View
-                    </Button>
-                  </td>
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" role="status" />
+              <p className="mt-3 text-muted">Loading logs...</p>
+            </div>
+          ) : error ? (
+            <Alert variant="danger">{error}</Alert>
+          ) : (
+            <Table striped bordered hover responsive>
+              <thead>
+                <tr>
+                  <th>Recipient</th>
+                  <th>Subject</th>
+                  <th>Status</th>
+                  <th>Sent At</th>
+                  <th>Template</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{log.recipient}</td>
+                    <td>{log.subject}</td>
+                    <td>{log.status}</td>
+                    <td>{log.sentAt}</td>
+                    <td>{log.template}</td>
+                    <td>
+                      <Button size="sm" onClick={() => setViewLog(log)}>View</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Card.Body>
       </Card>
 
-      {/* View Log Modal */}
-      <Modal show={!!viewLog} onHide={() => setViewLog(null)} size="lg">
-      <Modal.Header className="d-flex justify-content-between align-items-center">
-  <Modal.Title>Email Log Details</Modal.Title>
-  <i
-    className="ri-close-line"
-    style={{
-      cursor: 'pointer',
-      fontSize: '1.5rem',
-      color: '#6c757d',
-    }}
-    onClick={() => setViewLog(null)} // or your close handler
-  ></i>
-</Modal.Header>
+      <Modal show={!!viewLog} onHide={() => setViewLog(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Log Details</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           {viewLog && (
             <div className="row">
@@ -108,23 +112,15 @@ const EmailLogs = () => {
                 <p>{viewLog.recipient}</p>
               </div>
               <div className="col-md-6 mb-3">
-                <h6>Subject</h6>
-                <p>{viewLog.subject}</p>
-              </div>
-              <div className="col-md-6 mb-3">
                 <h6>Status</h6>
                 <p>
-                  <span
-                    className={`badge ${
-                      viewLog.status === "Delivered"
-                        ? "bg-success"
-                        : viewLog.status === "Failed"
-                        ? "bg-danger"
-                        : "bg-warning"
-                    }`}
-                  >
-                    {viewLog.status}
-                  </span>
+                  <span className={`badge ${
+                    viewLog.status === "Delivered"
+                      ? "bg-success"
+                      : viewLog.status === "Failed"
+                      ? "bg-danger"
+                      : "bg-warning"
+                  }`}>{viewLog.status}</span>
                 </p>
               </div>
               <div className="col-md-6 mb-3">
@@ -135,17 +131,17 @@ const EmailLogs = () => {
                 <h6>Template</h6>
                 <p>{viewLog.template}</p>
               </div>
-              <div className="col-md-6 mb-3">
-                <h6>Opened At</h6>
-                <p>{viewLog.openedAt || "Not opened"}</p>
+              <div className="col-md-12 mb-3">
+                <h6>Subject</h6>
+                <div className="p-3 bg-light rounded">
+                  <p className="mb-0">{viewLog.subject}</p>
+                </div>
               </div>
             </div>
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setViewLog(null)}>
-            Close
-          </Button>
+          <Button variant="secondary" onClick={() => setViewLog(null)}>Close</Button>
         </Modal.Footer>
       </Modal>
     </div>

@@ -7,6 +7,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import "./App.css";
+import ApiDebugPanel from "./components/Debug/ApiDebugPanel";
 import PanelLayout from "./layouts/PanelLayout";
 import AuthLayout from "./layouts/Authlayout";
 import NotFound404 from "./screens/NotFound404";
@@ -18,7 +19,7 @@ import {
   CodeVerification,
   NewPassword,
   CompanyDetails,
-
+ 
   Dashboard,
   Customers,
   CustomerForm,
@@ -470,6 +471,7 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<NotFound404 />} />
       </Routes>
+      {import.meta.env.DEV && <ApiDebugPanel />}
     </Router>
   );
 }

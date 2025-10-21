@@ -32,7 +32,7 @@ const SignUp = () => {
   };
 
   const handleSubmit = async (e) => {
-    alert('test');
+    
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.password) {
@@ -49,29 +49,22 @@ const SignUp = () => {
       setIsLoading(true);
       setError(null);
 
-      const formDataToSend = new FormData();
-      formDataToSend.append("name", formData.name);
-      formDataToSend.append("email", formData.email);
-      formDataToSend.append("password", formData.password);
-      formDataToSend.append(
-        "password_confirmation",
-        formData.password_confirmation
-      );
-      formDataToSend.append("userType", formData.userType);
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        password_confirmation: formData.password_confirmation,
+        userType: formData.userType,
+      };
 
-
-      const response = await axios.post(
-        `${Helpers.apiUrl}auth/register`,
-        formDataToSend,
-        Helpers.getAuthFileHeaders()
-      );
+      const response = await authService.register(payload);
 
       Helpers.toast(
         "success",
         "Registration successful! Please check your email for verification."
       );
       navigate(
-        `/code-verification?type=register&user_id=${response.data.user_id}`
+        `/code-verification?type=register&user_id=${response.user_id}`
       );
     } catch (error) {
       const errorMessage =

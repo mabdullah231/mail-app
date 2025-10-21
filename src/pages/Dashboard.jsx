@@ -48,33 +48,35 @@ const Dashboard = () => {
     };
     
     fetchDashboardData();
+    const intervalId = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const quickActions = [
     {
       name: 'Add Customer',
-      href: '/customers/new',
+      href: '/panel/customers/new',
       icon: Users,
       variant: 'primary',
       description: 'Add a new customer to your list'
     },
     {
       name: 'Create Template',
-      href: '/templates/new',
+      href: '/panel/templates/new',
       icon: FileText,
       variant: 'success',
       description: 'Design a new email template'
     },
     {
       name: 'Send Campaign',
-      href: '/campaigns/new',
+      href: '/panel/send-email-campaign',
       icon: Mail,
       variant: 'info',
       description: 'Send emails to your customers'
     },
     {
       name: 'View Analytics',
-      href: '/analytics',
+      href: '/panel/analytics',
       icon: BarChart3,
       variant: 'warning',
       description: 'Check your campaign performance'

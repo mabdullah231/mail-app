@@ -1,32 +1,37 @@
-import React, { useState } from 'react';
-import { Button, Card, Modal, Form, Row, Col } from 'react-bootstrap';
-
-const dummySmsTemplates = [
-  {
-    id: 1,
-    name: 'Welcome SMS',
-    category: 'Onboarding',
-    content: 'Hi {{name}}, welcome to EmailZus!',
-  },
-  {
-    id: 2,
-    name: 'Reminder SMS',
-    category: 'Transactional',
-    content: 'Hey {{name}}, your appointment is tomorrow at 3 PM.',
-  },
-];
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
+import { templateService } from '../../services/templateService';
 
 const SmsTemplates = () => {
-  const [templates, setTemplates] = useState(dummySmsTemplates);
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    content: '',
-  });
+  const [formData, setFormData] = useState({ id: null, name: '', category: '', content: '' });
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+        const allTemplates = await templateService.getAll();
+        const smsTemplates = (allTemplates || []).filter(t => (t.type || 'sms') === 'sms');
+        setTemplates(smsTemplates);
+      } catch (err) {
+        console.error('Failed to load SMS templates', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTemplates();
+  }, []);
+
+  const openCreate = () => {
+    setFormData({ id: null, name: '', category: '', content: '' });
+    setIsEditMode(false);
+    setShowEditor(true);
+  };
 
   const handleView = (template) => {
     setSelectedTemplate(template);
@@ -34,28 +39,52 @@ const SmsTemplates = () => {
   };
 
   const handleEdit = (template) => {
-    setFormData(template);
+    setFormData({
+      id: template.id,
+      name: template.name || template.title || '',
+      category: template.category || '',
+      content: template.content || '',
+    });
     setIsEditMode(true);
     setShowEditor(true);
     setShowViewModal(false);
   };
 
-  const handleDelete = (id) => {
-    setTemplates(templates.filter((t) => t.id !== id));
-    setShowViewModal(false);
+  const handleDelete = async (id) => {
+    try {
+      await templateService.delete(id);
+      setTemplates(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      console.error('Delete failed', err);
+    } finally {
+      setShowViewModal(false);
+    }
   };
 
-  const handleSave = () => {
-    if (isEditMode) {
-      setTemplates(
-        templates.map((t) => (t.id === formData.id ? { ...formData } : t))
-      );
-    } else {
-      setTemplates([...templates, { ...formData, id: Date.now() }]);
+  const handleSave = async () => {
+    const payload = {
+      title: formData.name,
+      category: formData.category,
+      content: formData.content,
+      type: 'sms',
+    };
+    try {
+      setLoading(true);
+      if (isEditMode && formData.id) {
+        const updated = await templateService.update(formData.id, payload);
+        setTemplates(prev => prev.map(t => (t.id === formData.id ? updated : t)));
+      } else {
+        const created = await templateService.create(payload);
+        setTemplates(prev => [created, ...prev]);
+      }
+      setShowEditor(false);
+      setIsEditMode(false);
+      setFormData({ id: null, name: '', category: '', content: '' });
+    } catch (err) {
+      console.error('Save failed', err);
+    } finally {
+      setLoading(false);
     }
-    setShowEditor(false);
-    setIsEditMode(false);
-    setFormData({ name: '', category: '', content: '' });
   };
 
   return (
@@ -63,23 +92,35 @@ const SmsTemplates = () => {
       {!showEditor && (
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4>SMS Templates</h4>
-          <Button onClick={() => setShowEditor(true)}>+ Add New Template</Button>
+          <Button onClick={openCreate}>+ Add New Template</Button>
         </div>
       )}
 
-      {!showEditor ? (
+      {loading && !showEditor ? (
+        <div className="d-flex align-items-center gap-2">
+          <Spinner animation="border" size="sm" />
+          <span>Loading templates…</span>
+        </div>
+      ) : !showEditor ? (
         <Row>
           {templates.map((template) => (
             <Col md={4} key={template.id} className="mb-3">
               <Card onClick={() => handleView(template)} className="cursor-pointer shadow-sm">
                 <Card.Body>
-                  <Card.Title>{template.name}</Card.Title>
-                  <Card.Subtitle className="mb-2 text-muted">{template.category}</Card.Subtitle>
-                  <Card.Text className="text-truncate">{template.content}</Card.Text>
+                  <Card.Title>{template.name || template.title}</Card.Title>
+                  {template.category && (
+                    <Card.Subtitle className="mb-2 text-muted">{template.category}</Card.Subtitle>
+                  )}
+                  {template.content && (
+                    <Card.Text className="text-truncate">{template.content}</Card.Text>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
           ))}
+          {templates.length === 0 && (
+            <div className="text-muted">No SMS templates found.</div>
+          )}
         </Row>
       ) : (
         <div className="p-3 border rounded bg-light">
@@ -145,40 +186,38 @@ const SmsTemplates = () => {
               onClick={() => {
                 setShowEditor(false);
                 setIsEditMode(false);
-                setFormData({ name: '', category: '', content: '' });
+                setFormData({ id: null, name: '', category: '', content: '' });
               }}
             >
               Cancel
             </Button>
-            <Button onClick={handleSave}>{isEditMode ? 'Update' : 'Save'}</Button>
+            <Button onClick={handleSave} disabled={loading}>{isEditMode ? 'Update' : 'Save'}</Button>
           </div>
         </div>
       )}
 
       <Modal show={showViewModal} onHide={() => setShowViewModal(false)} size="lg">
         <Modal.Header className="d-flex justify-content-between align-items-center">
-          <Modal.Title>{selectedTemplate?.name}</Modal.Title>
+          <Modal.Title>{selectedTemplate?.name || selectedTemplate?.title}</Modal.Title>
           <i
             className="ri-close-line"
-            style={{
-              cursor: 'pointer',
-              fontSize: '1.5rem',
-              color: '#6c757d',
-            }}
+            style={{ cursor: 'pointer', fontSize: '1.5rem', color: '#6c757d' }}
             onClick={() => setShowViewModal(false)}
           ></i>
         </Modal.Header>
         <Modal.Body>
           <h6>Category:</h6>
-          <p>{selectedTemplate?.category}</p>
+          <p>{selectedTemplate?.category || '-'}</p>
           <hr />
           <h6>Content:</h6>
-          <p>{selectedTemplate?.content}</p>
+          <p>{selectedTemplate?.content || '-'}</p>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="danger" onClick={() => handleDelete(selectedTemplate.id)}>
-            Delete
-          </Button>
+          {selectedTemplate?.id && (
+            <Button variant="danger" onClick={() => handleDelete(selectedTemplate.id)}>
+              Delete
+            </Button>
+          )}
           <Button onClick={() => handleEdit(selectedTemplate)}>
             Edit
           </Button>

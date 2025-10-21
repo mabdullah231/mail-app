@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import { Form, Modal, Button, Table, Card } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Form, Modal, Button, Table, Card, Spinner, Alert } from "react-bootstrap";
+import { templateService } from "../../services/templateService";
 
 const initialCampaigns = [
   {
@@ -39,6 +40,27 @@ const EmailCampaignPage = () => {
     schedule: "",
     status: "Draft",
   });
+
+  const [templates, setTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [templatesError, setTemplatesError] = useState("");
+
+  useEffect(() => {
+    const loadTemplates = async () => {
+      setTemplatesLoading(true);
+      setTemplatesError("");
+      try {
+        const allTemplates = await templateService.getAll();
+        const emailTemplates = (allTemplates || []).filter(t => t.type === 'email');
+        setTemplates(emailTemplates);
+      } catch (e) {
+        setTemplatesError(e?.response?.data?.message || e.message || "Failed to load templates");
+      } finally {
+        setTemplatesLoading(false);
+      }
+    };
+    loadTemplates();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -166,34 +188,42 @@ const EmailCampaignPage = () => {
                   </Form.Control>
                 </Form.Group>
                 <Form.Group className="col-md-6 mb-3 position-relative">
-  <Form.Label>Template</Form.Label>
-  <div className="position-relative">
-    <Form.Control
-      as="select"
-      name="template"
-      className="form-select pe-5"
-      value={newCampaign.template}
-      onChange={handleInputChange}
-    >
-      <option value="">Select Template</option>
-      <option value="Welcome_Template_01">Welcome Template</option>
-      <option value="Promo_August2025">Promo Template</option>
-      <option value="Feedback_01">Feedback Template</option>
-      <option value="Newsletter_2025">Newsletter Template</option>
-    </Form.Control>
-    <i
-      className="ri-arrow-down-s-line position-absolute"
-      style={{
-        top: "50%",
-        right: "15px",
-        transform: "translateY(-50%)",
-        pointerEvents: "none",
-        fontSize: "1.2rem",
-        color: "#6c757d",
-      }}
-    ></i>
-  </div>
-</Form.Group>
+                  <Form.Label>Template</Form.Label>
+                  <div className="position-relative">
+                    {templatesLoading && (
+                      <div className="d-flex align-items-center gap-2 mb-2">
+                        <Spinner animation="border" size="sm" />
+                        <span>Loading templates...</span>
+                      </div>
+                    )}
+                    {templatesError && (
+                      <Alert variant="danger" className="mb-2">{templatesError}</Alert>
+                    )}
+                    <Form.Control
+                      as="select"
+                      name="template"
+                      className="form-select pe-5"
+                      value={newCampaign.template}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select Template</option>
+                      {templates.map(t => (
+                        <option key={t.id} value={t.name}>{t.name}</option>
+                      ))}
+                    </Form.Control>
+                    <i
+                      className="ri-arrow-down-s-line position-absolute"
+                      style={{
+                        top: "50%",
+                        right: "15px",
+                        transform: "translateY(-50%)",
+                        pointerEvents: "none",
+                        fontSize: "1.2rem",
+                        color: "#6c757d",
+                      }}
+                    ></i>
+                  </div>
+                </Form.Group>
 
                 <Form.Group className="col-md-6 mb-3">
                   <Form.Label>Schedule</Form.Label>
@@ -220,7 +250,7 @@ const EmailCampaignPage = () => {
           <Modal.Title>Campaign Details</Modal.Title>
           <i
             className="ri-close-line"
-            style={{ cursor: 'pointer', fontSize: '1.5rem', color: '#6c757d' }}
+            style={{ cursor: "pointer", fontSize: "1.5rem", color: "#6c757d" }}
             onClick={() => setViewCampaign(null)}
           ></i>
         </Modal.Header>
@@ -228,7 +258,7 @@ const EmailCampaignPage = () => {
           {viewCampaign && (
             <div className="row">
               <div className="col-md-6 mb-3">
-                <h6>Campaign Name</h6>
+                <h6>Name</h6>
                 <p>{viewCampaign.name}</p>
               </div>
               <div className="col-md-6 mb-3">
@@ -237,7 +267,7 @@ const EmailCampaignPage = () => {
               </div>
               <div className="col-md-6 mb-3">
                 <h6>Template</h6>
-                <p>{viewCampaign.template}</p>
+                <p>{viewCampaign.template || "(none)"}</p>
               </div>
               <div className="col-md-6 mb-3">
                 <h6>Schedule</h6>
@@ -245,11 +275,9 @@ const EmailCampaignPage = () => {
               </div>
               <div className="col-md-6 mb-3">
                 <h6>Status</h6>
-                <p>
-                  <span className={`badge ${viewCampaign.status === "Sent" ? "bg-success" : viewCampaign.status === "Draft" ? "bg-secondary" : "bg-warning"}`}>
-                    {viewCampaign.status}
-                  </span>
-                </p>
+                <span className={`badge ${viewCampaign.status === "Sent" ? "bg-success" : viewCampaign.status === "Draft" ? "bg-secondary" : "bg-warning"}`}>
+                  {viewCampaign.status}
+                </span>
               </div>
             </div>
           )}

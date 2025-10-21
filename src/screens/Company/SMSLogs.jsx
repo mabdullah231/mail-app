@@ -1,105 +1,110 @@
-import React, { useState } from "react";
-import { Modal, Button, Table, Card } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Modal, Button, Table, Card, Spinner, Alert } from "react-bootstrap";
+import { smsService } from "../../services/smsService";
 
-const initialSmsLogs = [
-  {
-    id: 1,
-    recipient: "+1234567890",
-    message: "Thank you for your donation!",
-    status: "Delivered",
-    sentAt: "2023-05-15 11:45:30",
-    template: "Thank You SMS",
-    deliveredAt: "2023-05-15 11:45:35",
-  },
-  {
-    id: 2,
-    recipient: "+1987654321",
-    message: "Your account has been created",
-    status: "Delivered",
-    sentAt: "2023-05-14 08:20:15",
-    template: "Welcome SMS",
-    deliveredAt: "2023-05-14 08:20:20",
-  },
-  {
-    id: 3,
-    recipient: "+1122334455",
-    message: "Your subscription is expiring soon",
-    status: "Failed",
-    sentAt: "2023-05-13 16:10:45",
-    template: "Reminder SMS",
-    deliveredAt: null,
-  },
-];
-
-const SMSLogs = () => {
+function SMSLogs() {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [viewLog, setViewLog] = useState(null);
+
+  useEffect(() => {
+    const loadLogs = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const data = await smsService.getLogs();
+        const mapped = (data || []).map((item) => ({
+          id: item.id,
+          recipient: item.customer?.phone || "",
+          message: item.message || "",
+          status:
+            item.status === "sent"
+              ? "Delivered"
+              : item.status === "failed"
+              ? "Failed"
+              : item.status || "Pending",
+          sentAt: item.sent_at || item.created_at,
+          template: item.template?.name || "",
+          deliveredAt: null,
+        }));
+        setLogs(mapped);
+      } catch (e) {
+        setError(e?.response?.data?.message || e.message || "Failed to load logs");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadLogs();
+  }, []);
+
+  const handleExportCsv = async () => {
+    try {
+      const blob = await smsService.exportLogs();
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `sms_logs_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export SMS logs CSV', err);
+      alert('Failed to export CSV. Please try again.');
+    }
+  };
 
   return (
     <div className="container-fluid mt-4">
       <Card>
-        <Card.Header>
-          <h4 className="card-title mb-0">SMS Logs</h4>
+        <Card.Header className="d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">SMS Logs</h5>
+          <Button variant="primary" onClick={handleExportCsv}>Export CSV</Button>
         </Card.Header>
         <Card.Body>
-          <Table striped bordered responsive className="text-center">
-            <thead>
-              <tr>
-                <th>Recipient</th>
-                <th>Message Preview</th>
-                <th>Status</th>
-                <th>Sent At</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {initialSmsLogs.map((log) => (
-                <tr key={log.id}>
-                  <td>{log.recipient}</td>
-                  <td>{log.message.substring(0, 30)}...</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        log.status === "Delivered"
-                          ? "bg-success"
-                          : log.status === "Failed"
-                          ? "bg-danger"
-                          : "bg-warning"
-                      }`}
-                    >
-                      {log.status}
-                    </span>
-                  </td>
-                  <td>{log.sentAt}</td>
-                  <td>
-                    <Button
-                      variant="info"
-                      size="sm"
-                      onClick={() => setViewLog(log)}
-                    >
-                      <i className="ri-eye-line me-1"></i>View
-                    </Button>
-                  </td>
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" role="status" />
+              <p className="mt-3 text-muted">Loading logs...</p>
+            </div>
+          ) : error ? (
+            <Alert variant="danger">{error}</Alert>
+          ) : (
+            <Table striped bordered hover responsive>
+              <thead>
+                <tr>
+                  <th>Recipient</th>
+                  <th>Message</th>
+                  <th>Status</th>
+                  <th>Sent At</th>
+                  <th>Template</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id}>
+                    <td>{log.recipient}</td>
+                    <td>{log.message}</td>
+                    <td>{log.status}</td>
+                    <td>{log.sentAt}</td>
+                    <td>{log.template}</td>
+                    <td>
+                      <Button size="sm" onClick={() => setViewLog(log)}>View</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
         </Card.Body>
       </Card>
 
-      {/* View Log Modal */}
-      <Modal show={!!viewLog} onHide={() => setViewLog(null)} size="lg">
-      <Modal.Header className="d-flex justify-content-between align-items-center">
-  <Modal.Title>SMS Log Details</Modal.Title>
-  <i
-    className="ri-close-line"
-    style={{
-      cursor: 'pointer',
-      fontSize: '1.5rem',
-      color: '#6c757d',
-    }}
-    onClick={() => setViewLog(null)} // or your close handler
-  ></i>
-</Modal.Header>
+      <Modal show={!!viewLog} onHide={() => setViewLog(null)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Log Details</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           {viewLog && (
             <div className="row">
@@ -110,17 +115,13 @@ const SMSLogs = () => {
               <div className="col-md-6 mb-3">
                 <h6>Status</h6>
                 <p>
-                  <span
-                    className={`badge ${
-                      viewLog.status === "Delivered"
-                        ? "bg-success"
-                        : viewLog.status === "Failed"
-                        ? "bg-danger"
-                        : "bg-warning"
-                    }`}
-                  >
-                    {viewLog.status}
-                  </span>
+                  <span className={`badge ${
+                    viewLog.status === "Delivered"
+                      ? "bg-success"
+                      : viewLog.status === "Failed"
+                      ? "bg-danger"
+                      : "bg-warning"
+                  }`}>{viewLog.status}</span>
                 </p>
               </div>
               <div className="col-md-6 mb-3">
@@ -145,13 +146,11 @@ const SMSLogs = () => {
           )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setViewLog(null)}>
-            Close
-          </Button>
+          <Button variant="secondary" onClick={() => setViewLog(null)}>Close</Button>
         </Modal.Footer>
       </Modal>
     </div>
   );
-};
+}
 
 export default SMSLogs;

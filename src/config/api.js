@@ -12,6 +12,11 @@ const api = axios.create({
   },
 });
 
+// DEV: initialize global API logs buffer
+if (import.meta.env.DEV) {
+  window.__API_LOGS__ = window.__API_LOGS__ || [];
+}
+
 // Request interceptor to add auth token
 api.interceptors.request.use(
   (config) => {
@@ -19,6 +24,8 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // DEV: mark start time for latency tracking
+    config.metadata = { startTime: Date.now() };
     return config;
   },
   (error) => {
@@ -26,11 +33,44 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
+// Response interceptor to handle auth errors and log requests
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // DEV: log successful responses
+    try {
+      const duration = Date.now() - (response.config?.metadata?.startTime || Date.now());
+      if (import.meta.env.DEV && Array.isArray(window.__API_LOGS__)) {
+        window.__API_LOGS__.unshift({
+          url: response.config?.url,
+          method: (response.config?.method || 'GET').toUpperCase(),
+          status: response.status,
+          duration,
+          time: new Date().toISOString(),
+        });
+        window.__API_LOGS__ = window.__API_LOGS__.slice(0, 50);
+      }
+    } catch (_) {}
+    return response;
+  },
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    // DEV: log error responses
+    try {
+      const duration = Date.now() - (error.config?.metadata?.startTime || Date.now());
+      if (import.meta.env.DEV && Array.isArray(window.__API_LOGS__)) {
+        window.__API_LOGS__.unshift({
+          url: error.config?.url,
+          method: (error.config?.method || 'GET').toUpperCase(),
+          status: status || 0,
+          duration,
+          time: new Date().toISOString(),
+          error: error.response?.data || error.message,
+        });
+        window.__API_LOGS__ = window.__API_LOGS__.slice(0, 50);
+      }
+    } catch (_) {}
+
+    if (status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/sign-in';
