@@ -11,7 +11,8 @@ import {
   Line,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  Legend
 } from 'recharts';
 import { 
   Mail, 
@@ -38,9 +39,11 @@ const Analytics = () => {
     smsThisMonth: 0
   });
   const [chartData, setChartData] = useState([]);
+  const [pieData, setPieData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7days');
   const user = getUserData();
+  const [subscriberCounts, setSubscriberCounts] = useState({ email: 0, sms: 0, both: 0, none: 0 });
 
   useEffect(() => {
     loadAnalytics();
@@ -59,13 +62,56 @@ const Analytics = () => {
           customerService.getAll(companyResponse.company.id)
         ]);
 
+        // Ensure customers is an array (handle API returning {data: []})
+        const customersArray = Array.isArray(customers) ? customers : (customers?.data ?? []);
+
         setStats({
           totalEmails: emailStats.total_sent || 0,
           totalSMS: smsStats.total_sent || 0,
-          totalCustomers: customers.length || 0,
+          totalCustomers: customersArray.length || 0,
           emailsThisMonth: emailStats.sent_this_month || 0,
           smsThisMonth: smsStats.sent_this_month || 0
         });
+
+        // Compute subscriber distribution from real customer data (non-overlapping categories)
+        const emailOnlySubscribers = customersArray.filter(c => c.notification === 'email').length;
+        const smsOnlySubscribers = customersArray.filter(c => c.notification === 'sms').length;
+        const bothSubscribers = customersArray.filter(c => c.notification === 'both').length;
+        const noneSubscribers = customersArray.filter(c => c.notification === 'none' || (!c.notification)).length;
+        
+        // Debug: log counts and sample of customers
+        console.log('[Analytics] Subscription counts', {
+          emailOnlySubscribers,
+          smsOnlySubscribers,
+          bothSubscribers,
+          noneSubscribers,
+          customersTotal: customersArray.length,
+        });
+        console.table(customersArray.slice(0, 10).map(c => ({ id: c.id, notification: c.notification, sms_opt_in: c.sms_opt_in })));
+        
+        setSubscriberCounts({
+          email: emailOnlySubscribers,
+          sms: smsOnlySubscribers,
+          both: bothSubscribers,
+          none: noneSubscribers,
+        });
+        
+        // Only include categories with actual subscribers
+        const pieChartData = [];
+        if (emailOnlySubscribers > 0) {
+          pieChartData.push({ name: 'Email Only', value: emailOnlySubscribers, color: '#3B82F6' });
+        }
+        if (smsOnlySubscribers > 0) {
+          pieChartData.push({ name: 'SMS Only', value: smsOnlySubscribers, color: '#10B981' });
+        }
+        if (bothSubscribers > 0) {
+          pieChartData.push({ name: 'Email & SMS', value: bothSubscribers, color: '#8B5CF6' });
+        }
+        if (noneSubscribers > 0) {
+          pieChartData.push({ name: 'No Notifications', value: noneSubscribers, color: '#6B7280' });
+        }
+        
+        setPieData(pieChartData);
 
         // Generate sample chart data (in real app, this would come from backend)
         const sampleData = generateSampleChartData();
@@ -95,12 +141,6 @@ const Analytics = () => {
     
     return days;
   };
-
-  const pieData = [
-    { name: 'Email Subscribers', value: stats.totalCustomers * 0.7, color: '#3B82F6' },
-    { name: 'SMS Subscribers', value: stats.totalCustomers * 0.4, color: '#10B981' },
-    { name: 'Both', value: stats.totalCustomers * 0.3, color: '#8B5CF6' }
-  ];
 
   if (loading) {
     return (
@@ -252,7 +292,7 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Subscription Distribution & Recent Activity */}
+     
       <div className="row g-4 mb-4">
         {/* Subscription Distribution */}
         <div className="col-lg-6">
@@ -261,29 +301,47 @@ const Analytics = () => {
               <h5 className="card-title mb-0">Subscription Distribution</h5>
             </div>
             <div className="card-body">
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {pieData && pieData.length > 0 && pieData.some(d => d.value > 0) ? (
+                <>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={90}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ value }) => value}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value, name) => [`${value} customers`, name]} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-3 text-center text-muted small">
+                    Email Only: {subscriberCounts.email} • SMS Only: {subscriberCounts.sms} • Email & SMS: {subscriberCounts.both} • No Notifications: {subscriberCounts.none}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-5">
+                  <div className="text-muted mb-3">
+                    <Users size={48} className="mx-auto d-block mb-2 opacity-50" />
+                    <h6>No Customer Data Available</h6>
+                    <p className="mb-0">Add customers with notification preferences to see the subscription distribution.</p>
+                  </div>
+                  <small className="text-muted">
+                    Go to <strong>Customers</strong> → <strong>Add Customer</strong> to get started
+                  </small>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
         {/* Recent Activity */}
         <div className="col-lg-6">
           <div className="card">

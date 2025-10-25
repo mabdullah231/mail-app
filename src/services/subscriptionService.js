@@ -7,6 +7,15 @@ export const subscriptionService = {
     return response.data;
   },
 
+  // Create Stripe PaymentIntent
+  createStripeIntent: async ({ plan_duration, amount }) => {
+    const response = await api.post('/payments/stripe/create-intent', {
+      plan_duration,
+      amount,
+    });
+    return response.data;
+  },
+
   // Subscribe to branding removal
   subscribeBrandingRemoval: async (paymentData) => {
     const response = await api.post('/subscription/subscribe-branding-removal', paymentData);

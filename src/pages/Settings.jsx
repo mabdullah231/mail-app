@@ -27,12 +27,15 @@ import {
   Alert,
   Badge,
   ListGroup,
+  Modal,
 } from "react-bootstrap";
 import { companyService } from "../services/companyService";
 import authService from "../services/authService";
 import { subscriptionService } from "../services/subscriptionService";
 import { getUserData } from "../utils/auth";
 import { Notyf } from "notyf";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 
 const notyf = new Notyf();
 
@@ -66,6 +69,9 @@ const Settings = () => {
     new: false,
     confirm: false,
   });
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  const [clientSecret, setClientSecret] = useState(null);
+  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   const user = getUserData();
 
   useEffect(() => {
@@ -245,16 +251,20 @@ const Settings = () => {
     if (!window.confirm("Subscribe to branding removal for $5/month?")) {
       return;
     }
-
     try {
       setLoading(true);
-      await subscriptionService.subscribeBrandingRemoval({
-        payment_method: "paypal",
+      const res = await subscriptionService.createStripeIntent({
+        plan_duration: 1,
+        amount: 5.00,
       });
-      notyf.success("Successfully subscribed to branding removal");
-      loadData();
+      if (res?.client_secret) {
+        setClientSecret(res.client_secret);
+        setShowStripeModal(true);
+      } else {
+        notyf.error("Failed to initialize payment");
+      }
     } catch (error) {
-      notyf.error(error.response?.data?.message || "Failed to subscribe");
+      notyf.error(error.response?.data?.message || "Failed to start payment");
     } finally {
       setLoading(false);
     }
@@ -861,7 +871,7 @@ const Settings = () => {
                     </div>
                   </Card.Header>
                   <Card.Body className="p-4">
-                    {subscription ? (
+                    {subscription && subscription.plan_type?.toLowerCase() !== "free" && subscription.expires_at ? (
                       <div className="row">
                         <div className="col-12">
                           <Alert
@@ -1125,7 +1135,8 @@ const Settings = () => {
                               <div className="text-center mt-3">
                                 <small className="text-muted">
                                   <i className="fas fa-lock me-1"></i>
-                                  Secure payment processed by PayPal
+-                                  Secure payment processed by PayPal
++                                  Secure payment processed by Stripe
                                 </small>
                               </div>
                             </Card.Body>
@@ -1158,8 +1169,85 @@ const Settings = () => {
           </Col>
         </Row>
       </Tab.Container>
+
+      {/* Stripe Card Payment Modal */}
+      <Modal show={showStripeModal} onHide={() => setShowStripeModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Enter Card Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {clientSecret ? (
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <StripeCardForm
+                clientSecret={clientSecret}
+                onSuccess={() => {
+                  setShowStripeModal(false);
+                  loadData();
+                }}
+                onClose={() => setShowStripeModal(false)}
+              />
+            </Elements>
+          ) : (
+            <div>Initializing payment...</div>
+          )}
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };
 
 export default Settings;
+
+
+// Stripe card payment form component
+const StripeCardForm = ({ clientSecret, onSuccess, onClose }) => {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [processing, setProcessing] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    try {
+      const card = elements.getElement(CardElement);
+      const { paymentIntent, error } = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: { card }
+      });
+      if (error) {
+        notyf.error(error.message || "Payment failed");
+        setProcessing(false);
+        return;
+      }
+      if (paymentIntent && paymentIntent.status === 'succeeded') {
+        await subscriptionService.subscribeBrandingRemoval({
+          plan_duration: 1,
+          payment_id: paymentIntent.id,
+          payment_method: 'stripe',
+        });
+        notyf.success("Successfully subscribed to branding removal");
+        onSuccess?.();
+        onClose?.();
+      }
+    } catch (err) {
+      notyf.error(err.response?.data?.message || "Payment processing error");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <Form onSubmit={handleSubmit}>
+      <div className="mb-3">
+        <CardElement />
+      </div>
+      <div className="d-flex justify-content-end">
+        <Button variant="secondary" className="me-2" onClick={onClose}>Cancel</Button>
+        <Button variant="primary" type="submit" disabled={processing || !stripe}>
+          {processing ? "Processing..." : "Pay $5"}
+        </Button>
+      </div>
+    </Form>
+  );
+};
