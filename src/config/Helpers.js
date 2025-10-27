@@ -2,9 +2,9 @@ import { Notyf } from "notyf";
 import "notyf/notyf.min.css";
 
 class Helpers {
-  static localhost = "127.0.0.1:8000";
+  static localhost = "localhost:8000";
   static server = "emailzusapi.macodes.dev";
-  static basePath = `//${this.localhost}`;
+  static basePath = `http://${this.localhost}`;
   static apiUrl = `${this.basePath}/api/`;
   static googleUrl = `${this.basePath}/`;
   static ASSETS_IMAGES_PATH = "/assets/img";

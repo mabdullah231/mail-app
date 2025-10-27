@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Card, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
 import { templateService } from '../../services/templateService';
+import Helpers from '../../config/Helpers';
 
 const SmsTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -62,11 +63,39 @@ const SmsTemplates = () => {
   };
 
   const handleSave = async () => {
+    // Derive company_id from logged-in user
+    const companyId = Helpers.getItem('user', true)?.company_detail?.id || null;
+
+    if (!companyId) {
+      console.error('Missing company_id for SMS template creation');
+      Helpers.toast('error', 'Please complete company setup before creating SMS templates');
+      return;
+    }
+
+    // Basic validation
+    const title = formData.name?.trim() || '';
+    const content = formData.content?.trim() || '';
+    if (!title) {
+      Helpers.toast('error', 'Template name is required');
+      return;
+    }
+    if (!content) {
+      Helpers.toast('error', 'Template content is required');
+      return;
+    }
+
+    // Extract placeholders from content e.g. {{name}}
+    const placeholderRegex = /\{\{([^}]+)\}\}/g;
+    const matches = content.match(placeholderRegex) || [];
+    const placeholders = [...new Set(matches.map(m => m.replace(/\{\{|\}\}/g, '').trim()))];
+
+    // Map to backend expected fields
     const payload = {
-      title: formData.name,
-      category: formData.category,
-      content: formData.content,
+      title,
+      body_html: content,
       type: 'sms',
+      company_id: companyId,
+      placeholders,
     };
     try {
       setLoading(true);
